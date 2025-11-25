@@ -11,6 +11,7 @@
 
   "autohidehud.configuration.hideOptionsGroup": "Elements To Hide",
   "autohidehud.configuration.hideContextualInfoBar": "Hide Contextual Bar",
+  "autohidehud.configuration.hideSelectedItemName": "Hide Selected Item Name",
   "autohidehud.configuration.hideCrossHair": "Hide Crosshair",
   "autohidehud.configuration.hideArmorLevel": "Hide Player Armor",
   "autohidehud.configuration.hideAirLevel": "Hide Player Air Level",

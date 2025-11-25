@@ -335,9 +335,16 @@ public class AutoHideHUD {
 
     private boolean shouldHideLayer(ResourceLocation layerName) {
         if (AutoHideHUDConfig.hideHotbar.get() && layerName.equals(VanillaGuiLayers.HOTBAR)) return true;
+        if (AutoHideHUDConfig.hideSelectedItemName.get() && layerName.equals(VanillaGuiLayers.SELECTED_ITEM_NAME)) return true;
         if (AutoHideHUDConfig.hideHealthBar.get() && layerName.equals(VanillaGuiLayers.PLAYER_HEALTH)) return true;
+        if (AutoHideHUDConfig.hideHealthBar.get() && layerName.toString().equals("appleskin:health_offset")) return true;
+        if (AutoHideHUDConfig.hideHealthBar.get() && layerName.toString().equals("appleskin:health_restored")) return true;
         if (AutoHideHUDConfig.hideArmorLevel.get() && layerName.equals(VanillaGuiLayers.ARMOR_LEVEL)) return true;
         if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.equals(VanillaGuiLayers.FOOD_LEVEL)) return true;
+        if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:hunger_restored")) return true;
+        if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:food_offset")) return true;
+        if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:saturation_level")) return true;
+        if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:exhaustion_level")) return true;
         if (AutoHideHUDConfig.hideVehicleHealth.get() && layerName.equals(VanillaGuiLayers.VEHICLE_HEALTH)) return true;
         if (AutoHideHUDConfig.hideAirLevel.get() && layerName.equals(VanillaGuiLayers.AIR_LEVEL)) return true;
         if (AutoHideHUDConfig.hideExperienceLevel.get() && layerName.equals(VanillaGuiLayers.EXPERIENCE_LEVEL))

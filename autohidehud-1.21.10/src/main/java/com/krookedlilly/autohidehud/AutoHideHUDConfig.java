@@ -19,6 +19,7 @@ public class AutoHideHUDConfig {
 
     // Hide Options
     public static final ModConfigSpec.BooleanValue hideHotbar;
+    public static final ModConfigSpec.BooleanValue hideSelectedItemName;
     public static final ModConfigSpec.BooleanValue hideHealthBar;
     public static final ModConfigSpec.BooleanValue hideArmorLevel;
     public static final ModConfigSpec.BooleanValue hideFoodLevel;
@@ -90,6 +91,10 @@ public class AutoHideHUDConfig {
         hideHotbar = BUILDER
                 .comment("Hides the hotbar")
                 .define("hideHotbar", true);
+
+        hideSelectedItemName = BUILDER
+                .comment("Hides the selected hotbar item name")
+                .define("hideSelectedItemName", true);
 
         hideArmorLevel = BUILDER
                 .comment("Hides the player armor")
