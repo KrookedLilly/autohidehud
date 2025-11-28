@@ -3,10 +3,10 @@
   "autohidehud.configuration.section.autohidehud.common.toml": "Auto Hide HUD Configs",
   "autohidehud.configuration.section.autohidehud.common.toml.title": "Auto Hide HUD Configs",
 
-  "autohidehud.configuration.generalGroup": "Auto Hide General Settings",
+  "autohidehud.configuration.generalGroup": "General Settings",
   "autohidehud.configuration.enableAutoHiding": "Enabled",
   "autohidehud.configuration.ticksBeforeHiding": "Time Before Hiding",
-  "autohidehud.configuration.fadeOutSpeed": "Fade Out Speed",
+  "autohidehud.configuration.fadeOutSpeed": "Fade Out Duration",
   "autohidehud.configuration.targetOpacity": "Target Opacity",
 
   "autohidehud.configuration.hideOptionsGroup": "Elements To Hide",
@@ -21,6 +21,8 @@
   "autohidehud.configuration.hideFoodLevel": "Hide Player Food Level",
   "autohidehud.configuration.hideVehicleHealth": "Hide Vehicle Health",
   "autohidehud.configuration.hideStatusEffects": "Hide Player Status Effects",
+  "autohidehud.configuration.hideChatMessages": "Hide Chat Messages",
+  "autohidehud.configuration.hideSleepOverlay": "Hide Sleep Overlay Screen",
 
   "autohidehud.configuration.revealConditionsGroup": "Reveal Conditions",
   "autohidehud.configuration.revealWhenPlayerHealthChangedBelow": "Show While Health Below",
@@ -34,7 +36,7 @@
   "autohidehud.configuration.revealOnShowMenu": "Show In Menu",
   "autohidehud.configuration.returnToStateFromMenu": "Instant Fade From Menu",
 
-  "autohidehud.configuration.dataServerGroup": "Companion App Data Options",
+  "autohidehud.configuration.dataServerGroup": "Companion App Settings",
   "autohidehud.configuration.autoStartPlayerDataServer": "Auto Start Data Server",
   "autohidehud.configuration.playerDataServerPort": "Data Server Port",
   "autohidehud.configuration.playerDataServerTickRate": "Data Server Update Rate",

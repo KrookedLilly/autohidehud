@@ -507,7 +507,23 @@ public class AutoHideHUDCompanion extends JFrame {
             }
 
             if (playerData.showFacing) {
-                segments.add(new ColoredTextPane.ColoredTextSegment("Facing: " + playerData.facing + "\n", coloredPane.defaultStyle));
+                String firstLetter = playerData.facing.substring(0, 1).toUpperCase();
+
+                // Get the rest of the string
+                String remainingLetters = playerData.facing.substring(1);
+
+                // Concatenate the capitalized first letter with the rest of the string
+                String capitalizedString = firstLetter + remainingLetters;
+
+                String towardsAxis = switch (capitalizedString) {
+                    case "North" -> "(Towards Negative Z)";
+                    case "South" -> "(Towards Positive Z)";
+                    case "West" -> "(Towards Negative X)";
+                    case "East" -> "(Towards Positive X)";
+                    default -> "";
+                };
+
+                segments.add(new ColoredTextPane.ColoredTextSegment("Facing: " + capitalizedString + " " + towardsAxis + "\n", coloredPane.defaultStyle));
             }
 
             if (playerData.showArmorLevel) {

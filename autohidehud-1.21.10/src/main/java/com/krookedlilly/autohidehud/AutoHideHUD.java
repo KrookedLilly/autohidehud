@@ -130,7 +130,8 @@ public class AutoHideHUD {
             TEMP_PLAYER_DATA.selectedHotbarSlot = player.getInventory().getSelectedSlot();
             TEMP_PLAYER_DATA.vehicleHealth = .01f;
             TEMP_PLAYER_DATA.maxVehicleHealth = .01f;
-            TEMP_PLAYER_DATA.inMenu = minecraft.screen != null;
+//            TEMP_PLAYER_DATA.inMenu = minecraft.screen != null;
+            TEMP_PLAYER_DATA.inMenu = minecraft.screen != null && player.getBedOrientation() == null && (minecraft.screen.isInGameUi() || minecraft.screen.isPauseScreen());
             TEMP_PLAYER_DATA.x = player.getX();
             TEMP_PLAYER_DATA.y = player.getY();
             TEMP_PLAYER_DATA.z = player.getZ();
@@ -157,8 +158,13 @@ public class AutoHideHUD {
 
             inMenu = TEMP_PLAYER_DATA.inMenu;
 
-            if (!inMenu)
+            if (!inMenu) {
                 currentTick++;
+                LOGGER.info("bed dir: {}", player.getBedOrientation());
+            }
+            else {
+//                LOGGER.info("screen name: {}", minecraft.screen.getTitle().getString());
+            }
 
             Inventory inventory = player.getInventory();
             for (int i = 0; i < 9; i++) {
@@ -221,6 +227,11 @@ public class AutoHideHUD {
 
                 if (TEMP_PLAYER_DATA.inMenu && AutoHideHUDConfig.returnToStateFromMenu.get()) {
                     if (!hudState) {
+//                        if (AutoHideHUDConfig.hideChatMessages.get() && inMenu && minecraft.screen.getTitle().getString().equals("Chat screen")) {
+//                            LOGGER.info("here");
+//                            preventHide = false;
+//                            return;
+//                        }
                         // the HUD was not being shown when the menu was opened
                         // so temp disable render cancel
                         preventHide = true;
@@ -325,26 +336,37 @@ public class AutoHideHUD {
                 }
             } else {
                 alpha = 1f;
+//                LOGGER.info("layer: {}", event.getName());
             }
         } else if (!preventHide) {
             hudState = true;
             alpha = hotbarAlpha = currentAlpha = 1f;
             fadeStartTime = -1;
+        } else {
+            Minecraft minecraft = Minecraft.getInstance();
+//            if (minecraft.screen != null)
+//                LOGGER.info("minecraft screensafsdfasfasdfda pre check: {}", minecraft.screen.getTitle().getString());
         }
     }
 
     private boolean shouldHideLayer(ResourceLocation layerName) {
         if (AutoHideHUDConfig.hideHotbar.get() && layerName.equals(VanillaGuiLayers.HOTBAR)) return true;
-        if (AutoHideHUDConfig.hideSelectedItemName.get() && layerName.equals(VanillaGuiLayers.SELECTED_ITEM_NAME)) return true;
+        if (AutoHideHUDConfig.hideSelectedItemName.get() && layerName.equals(VanillaGuiLayers.SELECTED_ITEM_NAME))
+            return true;
         if (AutoHideHUDConfig.hideHealthBar.get() && layerName.equals(VanillaGuiLayers.PLAYER_HEALTH)) return true;
-        if (AutoHideHUDConfig.hideHealthBar.get() && layerName.toString().equals("appleskin:health_offset")) return true;
-        if (AutoHideHUDConfig.hideHealthBar.get() && layerName.toString().equals("appleskin:health_restored")) return true;
+        if (AutoHideHUDConfig.hideHealthBar.get() && layerName.toString().equals("appleskin:health_offset"))
+            return true;
+        if (AutoHideHUDConfig.hideHealthBar.get() && layerName.toString().equals("appleskin:health_restored"))
+            return true;
         if (AutoHideHUDConfig.hideArmorLevel.get() && layerName.equals(VanillaGuiLayers.ARMOR_LEVEL)) return true;
         if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.equals(VanillaGuiLayers.FOOD_LEVEL)) return true;
-        if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:hunger_restored")) return true;
+        if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:hunger_restored"))
+            return true;
         if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:food_offset")) return true;
-        if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:saturation_level")) return true;
-        if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:exhaustion_level")) return true;
+        if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:saturation_level"))
+            return true;
+        if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:exhaustion_level"))
+            return true;
         if (AutoHideHUDConfig.hideVehicleHealth.get() && layerName.equals(VanillaGuiLayers.VEHICLE_HEALTH)) return true;
         if (AutoHideHUDConfig.hideAirLevel.get() && layerName.equals(VanillaGuiLayers.AIR_LEVEL)) return true;
         if (AutoHideHUDConfig.hideExperienceLevel.get() && layerName.equals(VanillaGuiLayers.EXPERIENCE_LEVEL))
@@ -355,6 +377,33 @@ public class AutoHideHUD {
             return true;
         if (AutoHideHUDConfig.hideCrossHair.get() && layerName.equals(VanillaGuiLayers.CROSSHAIR)) return true;
         if (AutoHideHUDConfig.hideStatusEffects.get() && layerName.equals(VanillaGuiLayers.EFFECTS)) return true;
+        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.CHAT)) return true;
+//        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.SUBTITLE_OVERLAY)) return true;
+        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.SLEEP_OVERLAY)) return true;
+        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.TITLE)) return true;
+        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.BOSS_OVERLAY)) return true;
+        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.SCOREBOARD_SIDEBAR)) return true;
+        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.DEMO_OVERLAY)) return true;
+        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.AFTER_CAMERA_DECORATIONS)) return true;
+        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.OVERLAY_MESSAGE)) return true;
+        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.TAB_LIST)) return true;
+        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.SPECTATOR_TOOLTIP)) return true;
+        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.CAMERA_OVERLAYS)) return true;
+
+        if (AutoHideHUDConfig.hideSleepOverlay.get() && layerName.equals(VanillaGuiLayers.SUBTITLE_OVERLAY)) {
+            Minecraft minecraft = Minecraft.getInstance();
+            LocalPlayer player = minecraft.player;
+            if (minecraft.screen != null && player != null && minecraft.screen.getTitle().getString().equals("Chat screen") && player.getBedOrientation() != null) {
+                return true;
+            }
+        }
+
+//        Minecraft minecraft = Minecraft.getInstance();
+//        LOGGER.info("minecraft screen pre check: {}", minecraft.screen);
+//        if (minecraft.screen != null) {
+//            LOGGER.info("minecraft screen post check: {}", minecraft.screen.getTitle().getString());
+//            return true;
+//        }
 
         return false;
     }

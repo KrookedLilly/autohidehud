@@ -29,6 +29,8 @@ public class AutoHideHUDConfig {
     public static final ModConfigSpec.BooleanValue hideContextualInfoBar;
     public static final ModConfigSpec.BooleanValue hideCrossHair;
     public static final ModConfigSpec.BooleanValue hideStatusEffects;
+    public static final ModConfigSpec.BooleanValue hideChatMessages;
+    public static final ModConfigSpec.BooleanValue hideSleepOverlay;
 
     // Reveal Options
     public static final ModConfigSpec.IntValue revealWhenPlayerHealthChangedBelow;
@@ -132,6 +134,14 @@ public class AutoHideHUDConfig {
                 .comment("Hides the player status effects")
                 .define("hideStatusEffects", true);
 
+        hideChatMessages = BUILDER
+                .comment("Hides the chat messages")
+                .define("hideChatMessages", true);
+
+        hideSleepOverlay = BUILDER
+                .comment("Hides the sleep overlay while in bed")
+                .define("hideSleepOverlay", true);
+
         BUILDER.pop();
 
         // Reveal Options Section
@@ -176,7 +186,7 @@ public class AutoHideHUDConfig {
         BUILDER.pop();
 
         // Companion App Section
-        BUILDER.comment("Companion App/Server Settings").push("dataServerGroup");
+        BUILDER.comment("Companion App Settings").push("dataServerGroup");
 
         autoStartPlayerDataServer = BUILDER
                 .comment("Should the data server start automatically when in a world")
@@ -188,7 +198,7 @@ public class AutoHideHUDConfig {
 
         playerDataServerTickRate = BUILDER
                 .comment("How often will the data server send updates to the companion app in game ticks (20 ticks = 1 sec)")
-                .defineInRange("playerDataServerTickRate", 5, 1, Integer.MAX_VALUE);
+                .defineInRange("playerDataServerTickRate", 1, 1, Integer.MAX_VALUE);
 
         showPosition = BUILDER
                 .comment("Displays the player's position on the companion app")
@@ -243,7 +253,7 @@ public class AutoHideHUDConfig {
                 .define("showHotbarItems", true);
 
         focusedBackgroundColor = BUILDER
-                .comment("Sets the companion app's background color (hex format - must include #)")
+                .comment("Sets the companion app's background color (hex format)")
                 .define("focusedBackgroundColor", "#000000");
 
         transparentBackgroundNotFocused = BUILDER
