@@ -1,4 +1,6 @@
 {
+  "autohidehud.keybindings.revealkey": "Reveal HUD",
+
   "autohidehud.configuration.title": "Auto Hide HUD Configs",
   "autohidehud.configuration.section.autohidehud.common.toml": "Auto Hide HUD Configs",
   "autohidehud.configuration.section.autohidehud.common.toml.title": "Auto Hide HUD Configs",
@@ -23,6 +25,7 @@
   "autohidehud.configuration.hideStatusEffects": "Hide Player Status Effects",
   "autohidehud.configuration.hideChatMessages": "Hide Chat Messages",
   "autohidehud.configuration.hideSleepOverlay": "Hide Sleep Overlay Screen",
+  "autohidehud.configuration.additionalLayerIds": "Custom GUI Layer Ids",
 
   "autohidehud.configuration.revealConditionsGroup": "Reveal Conditions",
   "autohidehud.configuration.revealWhenPlayerHealthChangedBelow": "Show While Health Below",
@@ -53,6 +56,8 @@
   "autohidehud.configuration.showExperienceProgress": "Display Experience Progress",
   "autohidehud.configuration.showStatusEffects": "Display Status Effects",
   "autohidehud.configuration.showHotbarItems": "Display Hotbar Items",
-  "autohidehud.configuration.focusedBackgroundColor": "BG Color",
-  "autohidehud.configuration.transparentBackgroundNotFocused": "Transparent BG"
+  "autohidehud.configuration.focusedBackgroundColor": "Focused BG Color",
+  "autohidehud.configuration.focusedBackgroundOpacity": "Focused BG Opacity",
+  "autohidehud.configuration.notFocusedBackgroundColor": "Not Focused BG Color",
+  "autohidehud.configuration.notFocusedBackgroundOpacity": "Not Focused BG Opacity"
 }

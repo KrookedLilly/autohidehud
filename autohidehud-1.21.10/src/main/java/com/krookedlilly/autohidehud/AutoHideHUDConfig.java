@@ -1,11 +1,13 @@
 package com.krookedlilly.autohidehud;
 
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-import java.awt.*;
+import java.util.List;
 
 @EventBusSubscriber
 public class AutoHideHUDConfig {
@@ -31,6 +33,7 @@ public class AutoHideHUDConfig {
     public static final ModConfigSpec.BooleanValue hideStatusEffects;
     public static final ModConfigSpec.BooleanValue hideChatMessages;
     public static final ModConfigSpec.BooleanValue hideSleepOverlay;
+    public static final ModConfigSpec.ConfigValue<java.util.List<? extends String>> additionalLayerIds;
 
     // Reveal Options
     public static final ModConfigSpec.IntValue revealWhenPlayerHealthChangedBelow;
@@ -61,7 +64,9 @@ public class AutoHideHUDConfig {
     public static final ModConfigSpec.BooleanValue showStatusEffects;
     public static final ModConfigSpec.BooleanValue showHotbarItems;
     public static final ModConfigSpec.ConfigValue<String> focusedBackgroundColor;
-    public static final ModConfigSpec.BooleanValue transparentBackgroundNotFocused;
+    public static final ModConfigSpec.IntValue focusedBackgroundOpacity;
+    public static final ModConfigSpec.ConfigValue<String> notFocusedBackgroundColor;
+    public static final ModConfigSpec.IntValue notFocusedBackgroundOpacity;
 
     public static final ModConfigSpec SPEC;
 
@@ -141,6 +146,11 @@ public class AutoHideHUDConfig {
         hideSleepOverlay = BUILDER
                 .comment("Hides the sleep overlay while in bed")
                 .define("hideSleepOverlay", true);
+
+        // a list of strings that are treated as resource locations for items
+        additionalLayerIds = BUILDER
+                .comment("A list of custom GUI layers to hide")
+                .defineListAllowEmpty("additionalLayerIds", List.of(), () -> "", AutoHideHUDConfig::validateInput);
 
         BUILDER.pop();
 
@@ -253,12 +263,20 @@ public class AutoHideHUDConfig {
                 .define("showHotbarItems", true);
 
         focusedBackgroundColor = BUILDER
-                .comment("Sets the companion app's background color (hex format)")
+                .comment("Sets the companion app's background color while in focus (6-digit hex format with or without #)")
                 .define("focusedBackgroundColor", "#000000");
 
-        transparentBackgroundNotFocused = BUILDER
-                .comment("Sets the companion app's background to transparent when not in focus")
-                .define("transparentBackgroundNotFocused", true);
+        focusedBackgroundOpacity = BUILDER
+                .comment("Sets the companion app's background opacity while in focus (0 = transparent)")
+                .defineInRange("focusedBackgroundOpacity", 100, 0,  100);
+
+        notFocusedBackgroundColor = BUILDER
+                .comment("Sets the companion app's background color while not in focus (6-digit hex format with or without #)")
+                .define("notFocusedBackgroundColor", "#000000");
+
+        notFocusedBackgroundOpacity = BUILDER
+                .comment("Sets the companion app's background opacity while not in focus (0 = transparent)")
+                .defineInRange("notFocusedBackgroundOpacity", 0, 0,  100);
 
         BUILDER.pop();
 
@@ -284,5 +302,9 @@ public class AutoHideHUDConfig {
         } else {
             AutoHideHUD.stopServer();
         }
+    }
+
+    private static boolean validateInput(final Object obj) {
+        return obj instanceof String;
     }
 }

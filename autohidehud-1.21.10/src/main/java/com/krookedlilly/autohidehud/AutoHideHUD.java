@@ -50,6 +50,7 @@ public class AutoHideHUD {
 
     public static boolean inMenu = false;
     public static float hotbarAlpha = 1f;
+    public static boolean wasSleeping = false;
 
     public AutoHideHUD(IEventBus modBus, ModContainer modContainer) {
         NeoForge.EVENT_BUS.register(this);
@@ -85,7 +86,7 @@ public class AutoHideHUD {
 
     public static void stopServer() {
         if (dataServer == null || !dataServer.isRunning()) {
-            LOGGER.info("Data server was NULL or not running. Nothing top stop");
+            LOGGER.info("Data server was NULL or not running. Nothing to stop");
             return;
         }
 
@@ -109,6 +110,13 @@ public class AutoHideHUD {
 
     @SubscribeEvent
     public void onClientTick(ClientTickEvent.Post event) {
+        if (AutoHideHUDKeyBindings.REVEAL_KEY.get().consumeClick()) {
+            // This is client-side, so send packet to server if needed
+            preventHide = false;
+            lastUpdatedTick = currentTick;
+            return;
+        }
+
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
 
@@ -130,7 +138,6 @@ public class AutoHideHUD {
             TEMP_PLAYER_DATA.selectedHotbarSlot = player.getInventory().getSelectedSlot();
             TEMP_PLAYER_DATA.vehicleHealth = .01f;
             TEMP_PLAYER_DATA.maxVehicleHealth = .01f;
-//            TEMP_PLAYER_DATA.inMenu = minecraft.screen != null;
             TEMP_PLAYER_DATA.inMenu = minecraft.screen != null && player.getBedOrientation() == null && (minecraft.screen.isInGameUi() || minecraft.screen.isPauseScreen());
             TEMP_PLAYER_DATA.x = player.getX();
             TEMP_PLAYER_DATA.y = player.getY();
@@ -153,17 +160,15 @@ public class AutoHideHUD {
             TEMP_PLAYER_DATA.showStatusEffects = AutoHideHUDConfig.showStatusEffects.get();
             TEMP_PLAYER_DATA.showHotbarItems = AutoHideHUDConfig.showHotbarItems.get();
             TEMP_PLAYER_DATA.focusedBackgroundColor = AutoHideHUDConfig.focusedBackgroundColor.get();
-            TEMP_PLAYER_DATA.transparentBackgroundNotFocused = AutoHideHUDConfig.transparentBackgroundNotFocused.get();
+            TEMP_PLAYER_DATA.focusedBackgroundOpacity = AutoHideHUDConfig.focusedBackgroundOpacity.get();
+            TEMP_PLAYER_DATA.notFocusedBackgroundColor = AutoHideHUDConfig.notFocusedBackgroundColor.get();
+            TEMP_PLAYER_DATA.notFocusedBackgroundOpacity = AutoHideHUDConfig.notFocusedBackgroundOpacity.get();
             TEMP_PLAYER_DATA.portNumber = PlayerDataServer.PORT;
 
             inMenu = TEMP_PLAYER_DATA.inMenu;
 
             if (!inMenu) {
                 currentTick++;
-                LOGGER.info("bed dir: {}", player.getBedOrientation());
-            }
-            else {
-//                LOGGER.info("screen name: {}", minecraft.screen.getTitle().getString());
             }
 
             Inventory inventory = player.getInventory();
@@ -227,11 +232,6 @@ public class AutoHideHUD {
 
                 if (TEMP_PLAYER_DATA.inMenu && AutoHideHUDConfig.returnToStateFromMenu.get()) {
                     if (!hudState) {
-//                        if (AutoHideHUDConfig.hideChatMessages.get() && inMenu && minecraft.screen.getTitle().getString().equals("Chat screen")) {
-//                            LOGGER.info("here");
-//                            preventHide = false;
-//                            return;
-//                        }
                         // the HUD was not being shown when the menu was opened
                         // so temp disable render cancel
                         preventHide = true;
@@ -336,16 +336,11 @@ public class AutoHideHUD {
                 }
             } else {
                 alpha = 1f;
-//                LOGGER.info("layer: {}", event.getName());
             }
         } else if (!preventHide) {
             hudState = true;
             alpha = hotbarAlpha = currentAlpha = 1f;
             fadeStartTime = -1;
-        } else {
-            Minecraft minecraft = Minecraft.getInstance();
-//            if (minecraft.screen != null)
-//                LOGGER.info("minecraft screensafsdfasfasdfda pre check: {}", minecraft.screen.getTitle().getString());
         }
     }
 
@@ -378,32 +373,23 @@ public class AutoHideHUD {
         if (AutoHideHUDConfig.hideCrossHair.get() && layerName.equals(VanillaGuiLayers.CROSSHAIR)) return true;
         if (AutoHideHUDConfig.hideStatusEffects.get() && layerName.equals(VanillaGuiLayers.EFFECTS)) return true;
         if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.CHAT)) return true;
-//        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.SUBTITLE_OVERLAY)) return true;
-        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.SLEEP_OVERLAY)) return true;
-        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.TITLE)) return true;
-        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.BOSS_OVERLAY)) return true;
-        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.SCOREBOARD_SIDEBAR)) return true;
-        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.DEMO_OVERLAY)) return true;
-        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.AFTER_CAMERA_DECORATIONS)) return true;
-        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.OVERLAY_MESSAGE)) return true;
-        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.TAB_LIST)) return true;
-        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.SPECTATOR_TOOLTIP)) return true;
-        if (AutoHideHUDConfig.hideChatMessages.get() && layerName.equals(VanillaGuiLayers.CAMERA_OVERLAYS)) return true;
-
         if (AutoHideHUDConfig.hideSleepOverlay.get() && layerName.equals(VanillaGuiLayers.SUBTITLE_OVERLAY)) {
             Minecraft minecraft = Minecraft.getInstance();
             LocalPlayer player = minecraft.player;
+
             if (minecraft.screen != null && player != null && minecraft.screen.getTitle().getString().equals("Chat screen") && player.getBedOrientation() != null) {
+                wasSleeping = true;
+                return true;
+            } else if (wasSleeping) {
+                wasSleeping = false;
                 return true;
             }
-        }
 
-//        Minecraft minecraft = Minecraft.getInstance();
-//        LOGGER.info("minecraft screen pre check: {}", minecraft.screen);
-//        if (minecraft.screen != null) {
-//            LOGGER.info("minecraft screen post check: {}", minecraft.screen.getTitle().getString());
-//            return true;
-//        }
+            return false;
+
+//            return minecraft.screen != null && player != null && minecraft.screen.getTitle().getString().equals("Chat screen") && player.getBedOrientation() != null;
+        }
+        if(AutoHideHUDConfig.additionalLayerIds.get().contains(layerName.toString())) return true;
 
         return false;
     }
@@ -473,7 +459,9 @@ public class AutoHideHUD {
         boolean showStatusEffects = true;
         boolean showHotbarItems = true;
         String focusedBackgroundColor = "#000000";
-        boolean transparentBackgroundNotFocused = true;
+        int focusedBackgroundOpacity = 255;
+        String notFocusedBackgroundColor = "#000000";
+        int notFocusedBackgroundOpacity = 0;
     }
 
     static class InventoryItemData {

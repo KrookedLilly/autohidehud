@@ -45,8 +45,11 @@ public class AutoHideHUDCompanion extends JFrame {
     private static final int RESIZE_MARGIN = 10;
     private int resizeDirection = 0; // 0=none, 1=N, 2=S, 3=E, 4=W, 5=NE, 6=NW, 7=SE, 8=SW
     private boolean isResizing = false;
-    private boolean transparentNotFocused = true;
+    //    private boolean transparentNotFocused = true;
     private Color focusedBGColor = new Color(0, 0, 0, 255);
+    private int focusedBGOpacity = 100;
+    private Color notFocusedBGColor = new Color(0, 0, 0, 255);
+    private int notFocusedBGOpacity = 0;
     private volatile boolean isFocused = false;
     private boolean failedToConnect = false;
 
@@ -56,19 +59,59 @@ public class AutoHideHUDCompanion extends JFrame {
         // Load configuration first
         config = new Config();
         PORT = config.getPort();
-        transparentNotFocused = config.isTransparentWhenNotFocused();
 
-        // Parse the background color from config
-        String bgColorHex = config.getFocusedBGColor();
-        if (!bgColorHex.startsWith("#")) {
-            bgColorHex = "#" + bgColorHex;
-        }
-
-        int rgba = (int) Long.parseLong(bgColorHex.substring(1), 16);
-        focusedBGColor = new Color(rgba, bgColorHex.length() > 7);
-
+        setupFocusedBGColor();
+        setupNotFocusedBGColor();
         setupTransparentWindow();
         startConnectionAttempts();
+    }
+
+    private void setupFocusedBGColor() {
+        // Parse the background color from config
+        String focusedColorHex = config.getFocusedBackgroundColor();
+        if (!focusedColorHex.startsWith("#")) {
+            focusedColorHex = "#" + focusedColorHex;
+        }
+
+        focusedBGOpacity = config.getFocusedBackgroundOpacity();
+        float percent = focusedBGOpacity / 100f;
+        int opacity = (int)(255 * percent);
+        String paddedHexString = String.format("%02X", opacity);
+
+        // Create a StringBuilder from the original string
+        StringBuilder sb = new StringBuilder(focusedColorHex);
+        // Insert the characters after the first character (at index 1)
+        sb.insert(1, paddedHexString);
+
+        // Convert the StringBuilder back to a String
+        focusedColorHex = sb.toString();
+
+        int rgba = (int) Long.parseLong(focusedColorHex.substring(1), 16);
+        focusedBGColor = new Color(rgba, true);
+    }
+
+    private void setupNotFocusedBGColor() {
+        // Parse the background color from config
+        String notFocusedColorHex = config.getNotFocusedBackgroundColor();
+        if (!notFocusedColorHex.startsWith("#")) {
+            notFocusedColorHex = "#" + notFocusedColorHex;
+        }
+
+        notFocusedBGOpacity = config.getNotFocusedBackgroundOpacity();
+        float percent = notFocusedBGOpacity / 100f;
+        int opacity = (int)(255 * percent);
+        String paddedHexString = String.format("%02X", opacity);
+
+        // Create a StringBuilder from the original string
+        StringBuilder sb = new StringBuilder(notFocusedColorHex);
+        // Insert the characters after the first character (at index 1)
+        sb.insert(1, paddedHexString);
+
+        // Convert the StringBuilder back to a String
+        notFocusedColorHex = sb.toString();
+
+        int rgba = (int) Long.parseLong(notFocusedColorHex.substring(1), 16);
+        notFocusedBGColor = new Color(rgba, true);
     }
 
     private void setupTransparentWindow() {
@@ -415,6 +458,10 @@ public class AutoHideHUDCompanion extends JFrame {
             statusLabel.setText("Connected to Minecraft Server");
             statusLabel.setForeground(Color.GREEN);
 //            connectButton.setText("Disconnect");
+            if (isFullscreen) {
+                statusLabel.setVisible(false);
+                buttonPanel.setVisible(false);
+            }
 
             repaint();
         });
@@ -447,6 +494,9 @@ public class AutoHideHUDCompanion extends JFrame {
                     SwingUtilities.invokeLater(() -> {
                         statusLabel.setText("Connection Lost");
                         statusLabel.setForeground(Color.RED);
+
+                        statusLabel.setVisible(true);
+                        buttonPanel.setVisible(true);
 //                        connectButton.setText("Connect");
                         repaint();
                     });
@@ -581,25 +631,31 @@ public class AutoHideHUDCompanion extends JFrame {
                 segments.add(new ColoredTextPane.ColoredTextSegment("Hotbar Items:\n", coloredPane.defaultStyle));
 
                 if (playerData.inventoryData[9] == null) {
-                    segments.add(new ColoredTextPane.ColoredTextSegment("  Empty", coloredPane.defaultStyle));
+                    segments.add(new ColoredTextPane.ColoredTextSegment("  Empty", coloredPane.successStyle));
                 } else {
-                    segments.add(new ColoredTextPane.ColoredTextSegment("  " + playerData.inventoryData[9].name + " X" + playerData.inventoryData[9].count + " Durability: " + playerData.inventoryData[9].durability, coloredPane.defaultStyle));
+                    segments.add(new ColoredTextPane.ColoredTextSegment("  " + playerData.inventoryData[9].name + " X" + playerData.inventoryData[9].count + " Durability: " + playerData.inventoryData[9].durability, coloredPane.successStyle));
                 }
 
                 segments.add(new ColoredTextPane.ColoredTextSegment(" OFFHAND\n", coloredPane.successStyle));
 
                 for (int i = 0; i < 9; i++) {
-                    if (playerData.inventoryData[i] == null) {
-                        segments.add(new ColoredTextPane.ColoredTextSegment("  Empty", coloredPane.defaultStyle));
-                    } else {
-                        segments.add(new ColoredTextPane.ColoredTextSegment("  " + playerData.inventoryData[i].name + " X" + playerData.inventoryData[i].count + " Durability: " + playerData.inventoryData[i].durability, coloredPane.defaultStyle));
-                    }
+                    Style s = coloredPane.defaultStyle;
 
                     if (playerData.selectedHotbarSlot == i) {
-                        segments.add(new ColoredTextPane.ColoredTextSegment(" SELECTED\n", coloredPane.successStyle));
-                    } else if (i != 8) {
-                        segments.add(new ColoredTextPane.ColoredTextSegment("\n", coloredPane.successStyle));
+                        s = coloredPane.successStyle;
                     }
+
+                    if (playerData.inventoryData[i] == null) {
+                        segments.add(new ColoredTextPane.ColoredTextSegment("  Empty\n", s));
+                    } else {
+                        segments.add(new ColoredTextPane.ColoredTextSegment("  " + playerData.inventoryData[i].name + " X" + playerData.inventoryData[i].count + " Durability: " + playerData.inventoryData[i].durability + "\n", s));
+                    }
+
+//                    if (playerData.selectedHotbarSlot == i) {
+//                        segments.add(new ColoredTextPane.ColoredTextSegment(" SELECTED\n", coloredPane.successStyle));
+//                    } else if (i != 8) {
+//                        segments.add(new ColoredTextPane.ColoredTextSegment("\n", coloredPane.successStyle));
+//                    }
                 }
             }
 
@@ -612,34 +668,39 @@ public class AutoHideHUDCompanion extends JFrame {
             }
 
             if (!playerData.focusedBackgroundColor.equals(lastPlayerData.focusedBackgroundColor)) {
-                boolean hasPound = playerData.focusedBackgroundColor.contains("#");
-                String bgColor = (hasPound ? "" : "#") + playerData.focusedBackgroundColor;
-
-                int rgba = (int) Long.parseLong(bgColor.substring(1), 16);
-
-                // Create the Color object, specifying that the int includes alpha.
-                focusedBGColor = new Color(rgba, bgColor.length() > 7);
-
-                // apply the color if we are focused
-                if (isFocused || !playerData.transparentBackgroundNotFocused)
-                    setBackground(focusedBGColor);
-
-                // Save the updated color to config
-                config.setFocusedBGColor(bgColor);
+                config.setFocusedBackgroundColor(config.parseFocusedBackgroundColor(playerData.focusedBackgroundColor));
+                setupFocusedBGColor();
                 config.saveConfig();
+
+                if (isFocused)
+                    setBackground(focusedBGColor);
             }
 
-            if (playerData.transparentBackgroundNotFocused != lastPlayerData.transparentBackgroundNotFocused) {
-                transparentNotFocused = playerData.transparentBackgroundNotFocused;
-
-                if (!isFocused && playerData.transparentBackgroundNotFocused)
-                    setBackground(new Color(0, 0, 0, 0));
-                else if (!isFocused && !playerData.transparentBackgroundNotFocused)
-                    setBackground(focusedBGColor);
-
-                // Save the updated transparency setting to config
-                config.setTransparentWhenNotFocused(playerData.transparentBackgroundNotFocused);
+            if (playerData.focusedBackgroundOpacity != lastPlayerData.focusedBackgroundOpacity) {
+                config.setFocusedBackgroundOpacity(config.parseOpacity(String.valueOf(playerData.focusedBackgroundOpacity), "focusedBackgroundOpacity"));
+                setupFocusedBGColor();
                 config.saveConfig();
+
+                if (isFocused)
+                    setBackground(focusedBGColor);
+            }
+
+            if (!playerData.notFocusedBackgroundColor.equals(lastPlayerData.notFocusedBackgroundColor)) {
+                config.setNotFocusedBackgroundColor(config.parseNotFocusedBackgroundColor(playerData.notFocusedBackgroundColor));
+                setupNotFocusedBGColor();
+                config.saveConfig();
+
+                if (!isFocused)
+                    setBackground(notFocusedBGColor);
+            }
+
+            if (playerData.notFocusedBackgroundOpacity != lastPlayerData.notFocusedBackgroundOpacity) {
+                config.setNotFocusedBackgroundOpacity(config.parseOpacity(String.valueOf(playerData.notFocusedBackgroundOpacity), "notFocusedBackgroundOpacity"));
+                setupNotFocusedBGColor();
+                config.saveConfig();
+
+                if (!isFocused)
+                    setBackground(notFocusedBGColor);
             }
 
             lastPlayerData = playerData;
@@ -689,8 +750,9 @@ public class AutoHideHUDCompanion extends JFrame {
         if (lastPlayerData.showHotbarItems != playerData.showHotbarItems) dataChanged = true;
         if (lastPlayerData.portNumber != playerData.portNumber) dataChanged = true;
         if (!lastPlayerData.focusedBackgroundColor.equals(playerData.focusedBackgroundColor)) dataChanged = true;
-        if (lastPlayerData.transparentBackgroundNotFocused != playerData.transparentBackgroundNotFocused)
-            dataChanged = true;
+        if (!lastPlayerData.notFocusedBackgroundColor.equals(playerData.notFocusedBackgroundColor)) dataChanged = true;
+        if (lastPlayerData.focusedBackgroundOpacity != playerData.focusedBackgroundOpacity) dataChanged = true;
+        if (lastPlayerData.notFocusedBackgroundOpacity != playerData.notFocusedBackgroundOpacity) dataChanged = true;
 
         return dataChanged;
     }
@@ -738,8 +800,7 @@ public class AutoHideHUDCompanion extends JFrame {
             statusLabel.setVisible(false);
         }
 
-        if (transparentNotFocused)
-            setBackground(new Color(0, 0, 0, 0));
+        setBackground(notFocusedBGColor);
         repaint();
     }
 
@@ -785,7 +846,6 @@ public class AutoHideHUDCompanion extends JFrame {
             successStyle = textPane.addStyle("Success", null);
             StyleConstants.setForeground(successStyle, new Color(0, 200, 0));
         }
-
 
         // Clears the document and writes new text with default style
         public void writeText(String text) {
@@ -893,7 +953,10 @@ public class AutoHideHUDCompanion extends JFrame {
         boolean showStatusEffects = true;
         boolean showHotbarItems = true;
         String focusedBackgroundColor = "#000000";
-        boolean transparentBackgroundNotFocused = true;
+        int focusedBackgroundOpacity = 255;
+        String notFocusedBackgroundColor = "#000000";
+        int notFocusedBackgroundOpacity = 0;
+//        boolean transparentBackgroundNotFocused = true;
     }
 
     static class InventoryItemData {

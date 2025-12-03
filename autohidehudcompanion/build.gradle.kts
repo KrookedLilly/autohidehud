@@ -33,8 +33,9 @@ tasks.withType<JavaCompile> {
 tasks.register<Jar>("fatJar") {
     group = "build"
     description = "Creates a fat JAR with all dependencies"
-
-    archiveClassifier.set("all")
+    archiveBaseName.set("AutoHideHUDCompanion")  // Base name
+    archiveVersion.set("1.0.2")
+//    archiveClassifier.set("all")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     manifest {
