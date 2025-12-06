@@ -34,7 +34,7 @@ tasks.register<Jar>("fatJar") {
     group = "build"
     description = "Creates a fat JAR with all dependencies"
     archiveBaseName.set("AutoHideHUDCompanion")  // Base name
-    archiveVersion.set("1.0.2")
+    archiveVersion.set("1.0.3")
 //    archiveClassifier.set("all")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 

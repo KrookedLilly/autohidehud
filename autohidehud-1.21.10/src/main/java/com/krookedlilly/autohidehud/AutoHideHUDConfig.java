@@ -1,7 +1,5 @@
 package com.krookedlilly.autohidehud;
 
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.config.ModConfigEvent;
@@ -42,9 +40,11 @@ public class AutoHideHUDConfig {
     public static final ModConfigSpec.IntValue revealWhenPlayerAirChangedBelow;
     public static final ModConfigSpec.BooleanValue revealOnPlayerArmorChange;
     public static final ModConfigSpec.IntValue revealOnPlayerExperienceLevelChange;
+    public static final ModConfigSpec.IntValue revealOnSelectedHotbarDurabilityChange;
     public static final ModConfigSpec.BooleanValue revealOnPlayerExperienceProgressChange;
     public static final ModConfigSpec.BooleanValue revealOnPlayerHotbarSlotChange;
     public static final ModConfigSpec.BooleanValue returnToStateFromMenu;
+    public static final ModConfigSpec.BooleanValue revealIfInCreative;
 
     // Data Server Settings
     public static final ModConfigSpec.BooleanValue autoStartPlayerDataServer;
@@ -52,6 +52,7 @@ public class AutoHideHUDConfig {
     public static final ModConfigSpec.IntValue playerDataServerTickRate;
     public static final ModConfigSpec.BooleanValue showPosition;
     public static final ModConfigSpec.BooleanValue showFacing;
+//    public static final ModConfigSpec.BooleanValue showYawPitch;
     public static final ModConfigSpec.BooleanValue showHealth;
     public static final ModConfigSpec.IntValue showHealthWarning;
     public static final ModConfigSpec.BooleanValue showArmorLevel;
@@ -63,6 +64,9 @@ public class AutoHideHUDConfig {
     public static final ModConfigSpec.BooleanValue showExperienceProgress;
     public static final ModConfigSpec.BooleanValue showStatusEffects;
     public static final ModConfigSpec.BooleanValue showHotbarItems;
+    public static final ModConfigSpec.BooleanValue showHotbarItemsDurability;
+    public static final ModConfigSpec.BooleanValue showHotbarItemsDurabilityPercent;
+    public static final ModConfigSpec.BooleanValue showSelectedItemLabel;
     public static final ModConfigSpec.ConfigValue<String> focusedBackgroundColor;
     public static final ModConfigSpec.IntValue focusedBackgroundOpacity;
     public static final ModConfigSpec.ConfigValue<String> notFocusedBackgroundColor;
@@ -149,7 +153,7 @@ public class AutoHideHUDConfig {
 
         // a list of strings that are treated as resource locations for items
         additionalLayerIds = BUILDER
-                .comment("A list of custom GUI layers to hide")
+                .comment("A list of custom GUI layer ids to hide")
                 .defineListAllowEmpty("additionalLayerIds", List.of(), () -> "", AutoHideHUDConfig::validateInput);
 
         BUILDER.pop();
@@ -173,6 +177,10 @@ public class AutoHideHUDConfig {
                 .comment("Reveals the HUD while player air is below % (0 = disabled)")
                 .defineInRange("revealWhenPlayerAirChangedBelow", 50, 0, 100);
 
+        revealOnSelectedHotbarDurabilityChange = BUILDER
+                .comment("Reveals the HUD when selected hotbar item durability is below % (0 = disabled)")
+                .defineInRange("revealOnSelectedHotbarDurabilityChange", 15, 0, 100);
+
         revealOnPlayerExperienceLevelChange = BUILDER
                 .comment("Temp reveals the HUD when player experience level changes and is a multiple of value (0 = disabled)")
                 .defineInRange("revealOnPlayerExperienceLevelChange", 1, 0, Integer.MAX_VALUE);
@@ -192,6 +200,10 @@ public class AutoHideHUDConfig {
         returnToStateFromMenu = BUILDER
                 .comment("When closing a menu, should the HUD instantly fade if it was hidden before the menu was opened?")
                 .define("returnToStateFromMenu", true);
+
+        revealIfInCreative = BUILDER
+                .comment("Reveals the HUD while in creative mode")
+                .define("revealIfInCreative", true);
 
         BUILDER.pop();
 
@@ -217,6 +229,10 @@ public class AutoHideHUDConfig {
         showFacing = BUILDER
                 .comment("Displays the player's facing (North, East, South, West) on the companion app")
                 .define("showFacing", true);
+
+//        showYawPitch = BUILDER
+//                .comment("Displays the player's yaw and pitch on the companion app")
+//                .define("showYawPitch", true);
 
         showArmorLevel = BUILDER
                 .comment("Displays the player's armor level on the companion app")
@@ -261,6 +277,18 @@ public class AutoHideHUDConfig {
         showHotbarItems = BUILDER
                 .comment("Displays the player's hotbar items on the companion app")
                 .define("showHotbarItems", true);
+
+        showHotbarItemsDurability = BUILDER
+                .comment("Displays the player's hotbar items durability on the companion app")
+                .define("showHotbarItemsDurability", true);
+
+        showHotbarItemsDurabilityPercent = BUILDER
+                .comment("Displays the player's hotbar items durability as a % when 'Display Item Durability' is ON")
+                .define("showHotbarItemsDurabilityPercent", true);
+
+        showSelectedItemLabel = BUILDER
+                .comment("Displays 'SELECTED' next to the selected hotbar item in addition to color highlight")
+                .define("showSelectedItemLabel", false);
 
         focusedBackgroundColor = BUILDER
                 .comment("Sets the companion app's background color while in focus (6-digit hex format with or without #)")

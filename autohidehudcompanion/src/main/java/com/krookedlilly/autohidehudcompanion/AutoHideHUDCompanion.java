@@ -25,7 +25,7 @@ public class AutoHideHUDCompanion extends JFrame {
     private JScrollPane scrollPane;
     private JPanel mainPanel;
     private JPanel buttonPanel;
-    //    private JButton connectButton;
+    private JButton connectButton;
     private JButton fullscreenButton;
     private JButton closeButton;
 
@@ -45,13 +45,13 @@ public class AutoHideHUDCompanion extends JFrame {
     private static final int RESIZE_MARGIN = 10;
     private int resizeDirection = 0; // 0=none, 1=N, 2=S, 3=E, 4=W, 5=NE, 6=NW, 7=SE, 8=SW
     private boolean isResizing = false;
-    //    private boolean transparentNotFocused = true;
     private Color focusedBGColor = new Color(0, 0, 0, 255);
     private int focusedBGOpacity = 100;
     private Color notFocusedBGColor = new Color(0, 0, 0, 255);
     private int notFocusedBGOpacity = 0;
     private volatile boolean isFocused = false;
-    private boolean failedToConnect = false;
+    private String failedToConnectMessage = "";
+    private int connectionAttemptDelay = 2000; // in ms
 
     private PlayerData lastPlayerData;
 
@@ -63,7 +63,6 @@ public class AutoHideHUDCompanion extends JFrame {
         setupFocusedBGColor();
         setupNotFocusedBGColor();
         setupTransparentWindow();
-        startConnectionAttempts();
     }
 
     private void setupFocusedBGColor() {
@@ -75,7 +74,7 @@ public class AutoHideHUDCompanion extends JFrame {
 
         focusedBGOpacity = config.getFocusedBackgroundOpacity();
         float percent = focusedBGOpacity / 100f;
-        int opacity = (int)(255 * percent);
+        int opacity = (int) (255 * percent);
         String paddedHexString = String.format("%02X", opacity);
 
         // Create a StringBuilder from the original string
@@ -99,7 +98,7 @@ public class AutoHideHUDCompanion extends JFrame {
 
         notFocusedBGOpacity = config.getNotFocusedBackgroundOpacity();
         float percent = notFocusedBGOpacity / 100f;
-        int opacity = (int)(255 * percent);
+        int opacity = (int) (255 * percent);
         String paddedHexString = String.format("%02X", opacity);
 
         // Create a StringBuilder from the original string
@@ -151,12 +150,11 @@ public class AutoHideHUDCompanion extends JFrame {
         buttonPanel.setOpaque(false);
 
         // Connect button
-//        connectButton = new JButton("Connect");
-//        connectButton.setToolTipText("Connect to Minecraft Server");
-//        connectButton.setPreferredSize(new Dimension(110, 25));
-//        connectButton.addActionListener(e -> startConnectionAttempts());
-////        connectButton.addActionListener(e -> toggleConnection());
-//        buttonPanel.add(connectButton);
+        connectButton = new JButton("Connect");
+        connectButton.setToolTipText("Connect to Auto Hide HUD Server");
+        connectButton.setPreferredSize(new Dimension(110, 25));
+        connectButton.addActionListener(e -> toggleConnectionAttempts());
+        buttonPanel.add(connectButton);
 
         fullscreenButton = new JButton("⛶");
         fullscreenButton.setToolTipText("Toggle Fullscreen");
@@ -169,6 +167,7 @@ public class AutoHideHUDCompanion extends JFrame {
         closeButton.setPreferredSize(new Dimension(45, 25));
         closeButton.addActionListener(e -> {
             disconnect();
+
             if (connectionAttemptsTimer != null) {
                 connectionAttemptsTimer.stop();
             }
@@ -377,11 +376,10 @@ public class AutoHideHUDCompanion extends JFrame {
     private void toggleConnection() {
         if (isConnected) {
             disconnect();
-            startConnectionAttempts();
 
             coloredPane.clearDocument();
             SwingUtilities.invokeLater(() -> {
-//                connectButton.setText("Connect");
+                connectButton.setText("Connect");
                 statusLabel.setText("Disconnected");
                 statusLabel.setForeground(Color.YELLOW);
                 repaint();
@@ -392,11 +390,16 @@ public class AutoHideHUDCompanion extends JFrame {
                 stopConnectionAttempts();
                 startListening();
             } catch (IOException e) {
-                if (failedToConnect) return;
+                if (failedToConnectMessage.equals(e.getMessage())) return;
 
-                failedToConnect = true;
+                failedToConnectMessage = e.getMessage();
+                ArrayList<ColoredTextPane.ColoredTextSegment> segments = new ArrayList<>();
 
-                coloredPane.writeText("Failed to connect: " + e.getMessage() + "\n", coloredPane.errorStyle);
+                segments.add(new ColoredTextPane.ColoredTextSegment("Failed to connect: " + e.getMessage() + "\n", coloredPane.errorStyle));
+                if (e.getCause() == null)
+                    segments.add(new ColoredTextPane.ColoredTextSegment("server probably not running or incorrect port number, will retry every 2 seconds" + "\n", coloredPane.errorStyle));
+
+                coloredPane.writeColoredText(segments);
                 SwingUtilities.invokeLater(() -> {
                     statusLabel.setText("Connection Failed");
                     statusLabel.setForeground(Color.RED);
@@ -457,7 +460,7 @@ public class AutoHideHUDCompanion extends JFrame {
         SwingUtilities.invokeLater(() -> {
             statusLabel.setText("Connected to Minecraft Server");
             statusLabel.setForeground(Color.GREEN);
-//            connectButton.setText("Disconnect");
+            connectButton.setText("Disconnect");
             if (isFullscreen) {
                 statusLabel.setVisible(false);
                 buttonPanel.setVisible(false);
@@ -466,9 +469,8 @@ public class AutoHideHUDCompanion extends JFrame {
             repaint();
         });
 
-        coloredPane.writeText("=== Connected to Minecraft mod server ===\n\n");
         lastPlayerData = null;
-        failedToConnect = false;
+        failedToConnectMessage = "";
     }
 
     public void startListening() {
@@ -489,25 +491,33 @@ public class AutoHideHUDCompanion extends JFrame {
                     handlePlayerData(line);
                 }
             } catch (IOException e) {
-                if (isConnected) {
-                    coloredPane.writeText("\n=== Connection closed ===\n", coloredPane.errorStyle);
-                    SwingUtilities.invokeLater(() -> {
-                        statusLabel.setText("Connection Lost");
-                        statusLabel.setForeground(Color.RED);
+                coloredPane.writeText("\n=== Connection closed ===\n", coloredPane.errorStyle);
+                SwingUtilities.invokeLater(() -> {
+                    statusLabel.setText("Connection Lost");
+                    statusLabel.setForeground(Color.RED);
 
-                        statusLabel.setVisible(true);
-                        buttonPanel.setVisible(true);
-//                        connectButton.setText("Connect");
-                        repaint();
-                    });
-                }
-                isConnected = false;
+                    statusLabel.setVisible(true);
+                    buttonPanel.setVisible(true);
+                    connectButton.setText("Connect");
+                    repaint();
+                });
+
                 disconnect(); // Ensure cleanup
-                startConnectionAttempts();
             }
         });
         listenerThread.setDaemon(true);
         listenerThread.start();
+    }
+
+    private void toggleConnectionAttempts() {
+        if (connectionAttemptsTimer != null) {
+            failedToConnectMessage = "";
+            stopConnectionAttempts();
+        } else if (isConnected) {
+            disconnect();
+        } else {
+            startConnectionAttempts();
+        }
     }
 
     private void startConnectionAttempts() {
@@ -518,17 +528,32 @@ public class AutoHideHUDCompanion extends JFrame {
             }
         }
 
-        connectionAttemptsTimer = new Timer(2000, e -> {
+        connectionAttemptsTimer = new Timer(connectionAttemptDelay, e -> {
             toggleConnection();
         });
 
+        connectionAttemptsTimer.setInitialDelay(0);
         connectionAttemptsTimer.start();
+
+        connectButton.setText("Stop");
     }
 
     private void stopConnectionAttempts() {
         if (connectionAttemptsTimer != null) {
             connectionAttemptsTimer.stop();
             connectionAttemptsTimer = null;
+
+            if (!isConnected) {
+                SwingUtilities.invokeLater(() -> {
+                    statusLabel.setText("Disconnected");
+                    statusLabel.setForeground(Color.YELLOW);
+                    connectButton.setText("Connect");
+
+                    coloredPane.clearDocument();
+
+                    repaint();
+                });
+            }
         }
     }
 
@@ -559,10 +584,8 @@ public class AutoHideHUDCompanion extends JFrame {
             if (playerData.showFacing) {
                 String firstLetter = playerData.facing.substring(0, 1).toUpperCase();
 
-                // Get the rest of the string
                 String remainingLetters = playerData.facing.substring(1);
 
-                // Concatenate the capitalized first letter with the rest of the string
                 String capitalizedString = firstLetter + remainingLetters;
 
                 String towardsAxis = switch (capitalizedString) {
@@ -573,7 +596,7 @@ public class AutoHideHUDCompanion extends JFrame {
                     default -> "";
                 };
 
-                segments.add(new ColoredTextPane.ColoredTextSegment("Facing: " + capitalizedString + " " + towardsAxis + "\n", coloredPane.defaultStyle));
+                segments.add(new ColoredTextPane.ColoredTextSegment("Facing: " + capitalizedString + " " + towardsAxis + "(" + String.format("%.1f", playerData.yaw) + "/" + String.format("%.1f", playerData.pitch) + ")" + "\n", coloredPane.defaultStyle));
             }
 
             if (playerData.showArmorLevel) {
@@ -621,7 +644,6 @@ public class AutoHideHUDCompanion extends JFrame {
                 output.append("Status Effects: ").append("\n");
                 playerData.statusEffects.forEach(effect -> {
                     output.append("  ").append(effect.name).append("\n")
-//                            .append("  Amplifier: ").append(effect.amplifier).append("\n")
                             .append("  Duration: ").append(effect.duration).append("\n");
                 });
                 segments.add(new ColoredTextPane.ColoredTextSegment(output.toString(), coloredPane.defaultStyle));
@@ -648,14 +670,21 @@ public class AutoHideHUDCompanion extends JFrame {
                     if (playerData.inventoryData[i] == null) {
                         segments.add(new ColoredTextPane.ColoredTextSegment("  Empty\n", s));
                     } else {
-                        segments.add(new ColoredTextPane.ColoredTextSegment("  " + playerData.inventoryData[i].name + " X" + playerData.inventoryData[i].count + " Durability: " + playerData.inventoryData[i].durability + "\n", s));
-                    }
+                        segments.add(new ColoredTextPane.ColoredTextSegment("  " + playerData.inventoryData[i].name + " X" + playerData.inventoryData[i].count, s));
 
-//                    if (playerData.selectedHotbarSlot == i) {
-//                        segments.add(new ColoredTextPane.ColoredTextSegment(" SELECTED\n", coloredPane.successStyle));
-//                    } else if (i != 8) {
-//                        segments.add(new ColoredTextPane.ColoredTextSegment("\n", coloredPane.successStyle));
-//                    }
+                        if (playerData.showHotbarItemsDurability && playerData.inventoryData[i].maxDamage > 0) {
+                            float durability = playerData.showHotbarItemsDurabilityPercent ? ((float) playerData.inventoryData[i].durability / (float) playerData.inventoryData[i].maxDamage) * 100
+                                    : playerData.inventoryData[i].durability;
+
+                            segments.add(new ColoredTextPane.ColoredTextSegment(" Durability: " + (playerData.showHotbarItemsDurabilityPercent ? (String.format("%.1f", durability) + "%") : String.format("%.0f", durability)), s));
+                        }
+
+                        if (playerData.selectedHotbarSlot == i && playerData.showSelectedItemLabel) {
+                            segments.add(new ColoredTextPane.ColoredTextSegment(" SELECTED\n", s));
+                        } else if (i != 8) {
+                            segments.add(new ColoredTextPane.ColoredTextSegment("\n", s));
+                        }
+                    }
                 }
             }
 
@@ -730,6 +759,8 @@ public class AutoHideHUDCompanion extends JFrame {
         if (lastPlayerData.x != playerData.x) dataChanged = true;
         if (lastPlayerData.y != playerData.y) dataChanged = true;
         if (lastPlayerData.z != playerData.z) dataChanged = true;
+        if (lastPlayerData.yaw != playerData.yaw) dataChanged = true;
+        if (lastPlayerData.pitch != playerData.pitch) dataChanged = true;
         if (!lastPlayerData.facing.equals(playerData.facing)) dataChanged = true;
         if (!Arrays.equals(lastPlayerData.inventoryData, playerData.inventoryData)) dataChanged = true;
         if (!Arrays.equals(lastPlayerData.statusEffects.toArray(), playerData.statusEffects.toArray()))
@@ -738,6 +769,7 @@ public class AutoHideHUDCompanion extends JFrame {
         if (lastPlayerData.showArmorLevel != playerData.showArmorLevel) dataChanged = true;
         if (lastPlayerData.showPosition != playerData.showPosition) dataChanged = true;
         if (lastPlayerData.showFacing != playerData.showFacing) dataChanged = true;
+//        if (lastPlayerData.showYawPitch != playerData.showYawPitch) dataChanged = true;
         if (lastPlayerData.showHealth != playerData.showHealth) dataChanged = true;
         if (lastPlayerData.showHealthWarning != playerData.showHealthWarning) dataChanged = true;
         if (lastPlayerData.showVehicleHealth != playerData.showVehicleHealth) dataChanged = true;
@@ -748,6 +780,10 @@ public class AutoHideHUDCompanion extends JFrame {
         if (lastPlayerData.showExperienceProgress != playerData.showExperienceProgress) dataChanged = true;
         if (lastPlayerData.showStatusEffects != playerData.showStatusEffects) dataChanged = true;
         if (lastPlayerData.showHotbarItems != playerData.showHotbarItems) dataChanged = true;
+        if (lastPlayerData.showHotbarItemsDurability != playerData.showHotbarItemsDurability) dataChanged = true;
+        if (lastPlayerData.showHotbarItemsDurabilityPercent != playerData.showHotbarItemsDurabilityPercent)
+            dataChanged = true;
+        if (lastPlayerData.showSelectedItemLabel != playerData.showSelectedItemLabel) dataChanged = true;
         if (lastPlayerData.portNumber != playerData.portNumber) dataChanged = true;
         if (!lastPlayerData.focusedBackgroundColor.equals(playerData.focusedBackgroundColor)) dataChanged = true;
         if (!lastPlayerData.notFocusedBackgroundColor.equals(playerData.notFocusedBackgroundColor)) dataChanged = true;
@@ -796,8 +832,12 @@ public class AutoHideHUDCompanion extends JFrame {
         isFocused = false;
 
         if (isConnected) {
-            buttonPanel.setVisible(false);
-            statusLabel.setVisible(false);
+            Timer t = new Timer(1, e -> {
+                buttonPanel.setVisible(false);
+                statusLabel.setVisible(false);
+            });
+            t.setRepeats(false);
+            t.start();
         }
 
         setBackground(notFocusedBGColor);
@@ -874,7 +914,6 @@ public class AutoHideHUDCompanion extends JFrame {
             }
         }
 
-
         // Appends text without clearing (useful for building multi-colored output)
         public void appendText(String text, Style style) {
             try {
@@ -941,6 +980,7 @@ public class AutoHideHUDCompanion extends JFrame {
         int portNumber = 33333;
         boolean showPosition = true;
         boolean showFacing = true;
+        //        boolean showYawPitch = true;
         boolean showHealth = true;
         int showHealthWarning = 30;
         boolean showArmorLevel = true;
@@ -952,11 +992,13 @@ public class AutoHideHUDCompanion extends JFrame {
         boolean showExperienceProgress = true;
         boolean showStatusEffects = true;
         boolean showHotbarItems = true;
+        boolean showHotbarItemsDurability = true;
+        boolean showHotbarItemsDurabilityPercent = true;
+        boolean showSelectedItemLabel = false;
         String focusedBackgroundColor = "#000000";
         int focusedBackgroundOpacity = 255;
         String notFocusedBackgroundColor = "#000000";
         int notFocusedBackgroundOpacity = 0;
-//        boolean transparentBackgroundNotFocused = true;
     }
 
     static class InventoryItemData {
@@ -968,6 +1010,7 @@ public class AutoHideHUDCompanion extends JFrame {
         int maxDamage = 0;
         int durability = 0;
         boolean enchanted = false;
+        boolean selected = false;
 
         @Override
         public boolean equals(Object obj) {
@@ -981,6 +1024,7 @@ public class AutoHideHUDCompanion extends JFrame {
                     maxDamage == other.maxDamage &&
                     durability == other.durability &&
                     enchanted == other.enchanted &&
+                    selected == other.selected &&
                     (Objects.equals(name, other.name)) &&
                     (Objects.equals(id, other.id));
         }
@@ -995,6 +1039,7 @@ public class AutoHideHUDCompanion extends JFrame {
             result = 31 * result + maxDamage;
             result = 31 * result + durability;
             result = 31 * result + (enchanted ? 1 : 0);
+            result = 31 * result + (selected ? 1 : 0);
             return result;
         }
     }

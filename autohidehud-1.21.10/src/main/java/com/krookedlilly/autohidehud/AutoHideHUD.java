@@ -126,6 +126,8 @@ public class AutoHideHUD {
                 stopServer();
             }
         } else {
+            Inventory inventory = player.getInventory();
+
             TEMP_PLAYER_DATA.health = player.getHealth();
             TEMP_PLAYER_DATA.maxHealth = player.getMaxHealth();
             TEMP_PLAYER_DATA.armor = player.getArmorValue();
@@ -135,7 +137,7 @@ public class AutoHideHUD {
             TEMP_PLAYER_DATA.isCreative = player.isCreative();
             TEMP_PLAYER_DATA.experienceLevel = player.experienceLevel;
             TEMP_PLAYER_DATA.experienceProgress = player.experienceProgress;
-            TEMP_PLAYER_DATA.selectedHotbarSlot = player.getInventory().getSelectedSlot();
+            TEMP_PLAYER_DATA.selectedHotbarSlot = inventory.getSelectedSlot();
             TEMP_PLAYER_DATA.vehicleHealth = .01f;
             TEMP_PLAYER_DATA.maxVehicleHealth = .01f;
             TEMP_PLAYER_DATA.inMenu = minecraft.screen != null && player.getBedOrientation() == null && (minecraft.screen.isInGameUi() || minecraft.screen.isPauseScreen());
@@ -148,6 +150,7 @@ public class AutoHideHUD {
 
             TEMP_PLAYER_DATA.showPosition = AutoHideHUDConfig.showPosition.get();
             TEMP_PLAYER_DATA.showFacing = AutoHideHUDConfig.showFacing.get();
+//            TEMP_PLAYER_DATA.showYawPitch = AutoHideHUDConfig.showYawPitch.get();
             TEMP_PLAYER_DATA.showHealth = AutoHideHUDConfig.showHealth.get();
             TEMP_PLAYER_DATA.showHealthWarning = AutoHideHUDConfig.showHealthWarning.get();
             TEMP_PLAYER_DATA.showArmorLevel = AutoHideHUDConfig.showArmorLevel.get();
@@ -159,6 +162,9 @@ public class AutoHideHUD {
             TEMP_PLAYER_DATA.showExperienceProgress = AutoHideHUDConfig.showExperienceProgress.get();
             TEMP_PLAYER_DATA.showStatusEffects = AutoHideHUDConfig.showStatusEffects.get();
             TEMP_PLAYER_DATA.showHotbarItems = AutoHideHUDConfig.showHotbarItems.get();
+            TEMP_PLAYER_DATA.showHotbarItemsDurability = AutoHideHUDConfig.showHotbarItemsDurability.get();
+            TEMP_PLAYER_DATA.showHotbarItemsDurabilityPercent = AutoHideHUDConfig.showHotbarItemsDurabilityPercent.get();
+            TEMP_PLAYER_DATA.showSelectedItemLabel = AutoHideHUDConfig.showSelectedItemLabel.get();
             TEMP_PLAYER_DATA.focusedBackgroundColor = AutoHideHUDConfig.focusedBackgroundColor.get();
             TEMP_PLAYER_DATA.focusedBackgroundOpacity = AutoHideHUDConfig.focusedBackgroundOpacity.get();
             TEMP_PLAYER_DATA.notFocusedBackgroundColor = AutoHideHUDConfig.notFocusedBackgroundColor.get();
@@ -171,7 +177,7 @@ public class AutoHideHUD {
                 currentTick++;
             }
 
-            Inventory inventory = player.getInventory();
+            InventoryItemData selectedItem = null;
             for (int i = 0; i < 9; i++) {
                 ItemStack stack = inventory.getItem(i);
                 if (!stack.isEmpty()) {
@@ -186,6 +192,10 @@ public class AutoHideHUD {
                     data.maxDamage = stack.getMaxDamage();
                     data.durability = data.maxDamage - data.damage;
                     data.enchanted = stack.isEnchanted();
+                    data.selected = i == TEMP_PLAYER_DATA.selectedHotbarSlot;
+
+                    if (data.selected)
+                        selectedItem = data;
 
                     TEMP_PLAYER_DATA.inventoryData[i] = data;
                 } else {
@@ -256,11 +266,12 @@ public class AutoHideHUD {
                 }
             }
 
-            if ((TEMP_PLAYER_DATA.isCreative != LAST_PLAYER_DATA.isCreative) ||
+            if ((TEMP_PLAYER_DATA.isCreative && AutoHideHUDConfig.revealIfInCreative.get()) ||
                     (AutoHideHUDConfig.revealWhenPlayerHealthChangedBelow.get() / 100f > TEMP_PLAYER_DATA.health / TEMP_PLAYER_DATA.maxHealth) ||
                     (AutoHideHUDConfig.revealWhenVehicleHealthChangedBelow.get() / 100f > TEMP_PLAYER_DATA.vehicleHealth / TEMP_PLAYER_DATA.maxVehicleHealth) ||
                     (AutoHideHUDConfig.revealWhenPlayerFoodChangedBelow.get() / 100f > (float) TEMP_PLAYER_DATA.foodLevel / (float) TEMP_PLAYER_DATA.maxFoodLevel) ||
                     (AutoHideHUDConfig.revealWhenPlayerAirChangedBelow.get() / 100f > (float) TEMP_PLAYER_DATA.airSupply / (float) TEMP_PLAYER_DATA.maxAirSupply) ||
+                    (selectedItem != null && selectedItem.maxDamage != 0 && AutoHideHUDConfig.revealOnSelectedHotbarDurabilityChange.get() / 100f > (float) selectedItem.durability / (float) selectedItem.maxDamage) ||
                     (TEMP_PLAYER_DATA.armor != LAST_PLAYER_DATA.armor && AutoHideHUDConfig.revealOnPlayerArmorChange.get()) ||
                     (TEMP_PLAYER_DATA.experienceLevel != LAST_PLAYER_DATA.experienceLevel && TEMP_PLAYER_DATA.experienceLevel % AutoHideHUDConfig.revealOnPlayerExperienceLevelChange.get() == 0) ||
                     (TEMP_PLAYER_DATA.experienceProgress != LAST_PLAYER_DATA.experienceProgress && AutoHideHUDConfig.revealOnPlayerExperienceProgressChange.get()) ||
@@ -386,8 +397,6 @@ public class AutoHideHUD {
             }
 
             return false;
-
-//            return minecraft.screen != null && player != null && minecraft.screen.getTitle().getString().equals("Chat screen") && player.getBedOrientation() != null;
         }
         if(AutoHideHUDConfig.additionalLayerIds.get().contains(layerName.toString())) return true;
 
@@ -443,10 +452,11 @@ public class AutoHideHUD {
         InventoryItemData[] inventoryData = new InventoryItemData[10];
         ArrayList<StatusEffectData> statusEffects = new ArrayList<StatusEffectData>();
 
-        // server settings
+        // companion settings
         int portNumber = 33333;
         boolean showPosition = true;
         boolean showFacing = true;
+//        boolean showYawPitch = true;
         boolean showHealth = true;
         int showHealthWarning = 30;
         boolean showArmorLevel = true;
@@ -458,6 +468,9 @@ public class AutoHideHUD {
         boolean showExperienceProgress = true;
         boolean showStatusEffects = true;
         boolean showHotbarItems = true;
+        boolean showHotbarItemsDurability = true;
+        boolean showHotbarItemsDurabilityPercent = true;
+        boolean showSelectedItemLabel = false;
         String focusedBackgroundColor = "#000000";
         int focusedBackgroundOpacity = 255;
         String notFocusedBackgroundColor = "#000000";
@@ -473,6 +486,7 @@ public class AutoHideHUD {
         int maxDamage = 0;
         int durability = 0;
         boolean enchanted = false;
+        boolean selected = false;
     }
 
     static class StatusEffectData {
