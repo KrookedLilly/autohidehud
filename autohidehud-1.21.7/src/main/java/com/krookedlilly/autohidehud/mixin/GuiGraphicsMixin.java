@@ -4,9 +4,7 @@ import com.krookedlilly.autohidehud.AutoHideHUD;
 import net.minecraft.client.gui.GuiGraphics;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 // 1.21.8's GuiGraphics is a HYBRID: it has the new RenderPipeline arg on blit/fill/blitSprite
 // (unlike 1.21.4), but does NOT have the submit-based color-packed draw API that 1.21.10 uses.
@@ -14,9 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GuiGraphics.class)
 public class GuiGraphicsMixin {
 
-    // Item rendering uses a separate 3D pipeline whose shaders don't respect setShaderColor.
-    // Cancel item renders once fade alpha drops near zero so the hotbar can fully hide.
-    private static final float ITEM_CANCEL_THRESHOLD = 0.05f;
 
     // fill(x1, y1, x2, y2, color)
     @ModifyVariable(method = "fill(IIIII)V", at = @At("HEAD"), argsOnly = true, ordinal = 4)
@@ -96,40 +91,4 @@ public class GuiGraphicsMixin {
         return AutoHideHUD.applyAlpha(color);
     }
 
-    // --- Item render cancellation (same pattern as 1.21.4 since 3D item pipeline ignores tint) ---
-
-    @Inject(method = "renderItem(Lnet/minecraft/world/item/ItemStack;II)V", at = @At("HEAD"), cancellable = true)
-    private void autohidehud$cancelRenderItem(net.minecraft.world.item.ItemStack stack, int x, int y, CallbackInfo ci) {
-        if (AutoHideHUD.getAlpha() < ITEM_CANCEL_THRESHOLD) ci.cancel();
-    }
-
-    @Inject(method = "renderItem(Lnet/minecraft/world/item/ItemStack;III)V", at = @At("HEAD"), cancellable = true)
-    private void autohidehud$cancelRenderItemSeed(net.minecraft.world.item.ItemStack stack, int x, int y, int seed, CallbackInfo ci) {
-        if (AutoHideHUD.getAlpha() < ITEM_CANCEL_THRESHOLD) ci.cancel();
-    }
-
-    @Inject(method = "renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;III)V", at = @At("HEAD"), cancellable = true)
-    private void autohidehud$cancelRenderItemEntity(net.minecraft.world.entity.LivingEntity entity, net.minecraft.world.item.ItemStack stack, int x, int y, int seed, CallbackInfo ci) {
-        if (AutoHideHUD.getAlpha() < ITEM_CANCEL_THRESHOLD) ci.cancel();
-    }
-
-    @Inject(method = "renderFakeItem(Lnet/minecraft/world/item/ItemStack;II)V", at = @At("HEAD"), cancellable = true)
-    private void autohidehud$cancelRenderFakeItem(net.minecraft.world.item.ItemStack stack, int x, int y, CallbackInfo ci) {
-        if (AutoHideHUD.getAlpha() < ITEM_CANCEL_THRESHOLD) ci.cancel();
-    }
-
-    @Inject(method = "renderFakeItem(Lnet/minecraft/world/item/ItemStack;III)V", at = @At("HEAD"), cancellable = true)
-    private void autohidehud$cancelRenderFakeItemSeed(net.minecraft.world.item.ItemStack stack, int x, int y, int seed, CallbackInfo ci) {
-        if (AutoHideHUD.getAlpha() < ITEM_CANCEL_THRESHOLD) ci.cancel();
-    }
-
-    @Inject(method = "renderItemDecorations(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;II)V", at = @At("HEAD"), cancellable = true)
-    private void autohidehud$cancelRenderItemDecorations(net.minecraft.client.gui.Font font, net.minecraft.world.item.ItemStack stack, int x, int y, CallbackInfo ci) {
-        if (AutoHideHUD.getAlpha() < ITEM_CANCEL_THRESHOLD) ci.cancel();
-    }
-
-    @Inject(method = "renderItemDecorations(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;IILjava/lang/String;)V", at = @At("HEAD"), cancellable = true)
-    private void autohidehud$cancelRenderItemDecorationsText(net.minecraft.client.gui.Font font, net.minecraft.world.item.ItemStack stack, int x, int y, String text, CallbackInfo ci) {
-        if (AutoHideHUD.getAlpha() < ITEM_CANCEL_THRESHOLD) ci.cancel();
-    }
 }

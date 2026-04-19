@@ -6,7 +6,8 @@
   ],
   "client": [
     "GuiGraphicsMixin",
-    "GuiTextRenderStateMixin"
+    "GuiTextRenderStateMixin",
+    "GuiRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -9,7 +9,8 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(GuiTextRenderState.class)
 public abstract class GuiTextRenderStateMixin {
     @ModifyVariable(
-            method = {"<init>(Lnet/minecraft/client/gui/Font;Lnet/minecraft/util/FormattedCharSequence;Lorg/joml/Matrix3x2f;IIIIZLnet/minecraft/client/gui/navigation/ScreenRectangle;)V"},
+            // 1.21.11 changed the matrix type to the read-only Matrix3x2fc interface and added a second boolean.
+            method = {"<init>(Lnet/minecraft/client/gui/Font;Lnet/minecraft/util/FormattedCharSequence;Lorg/joml/Matrix3x2fc;IIIIZZLnet/minecraft/client/gui/navigation/ScreenRectangle;)V"},
             at = @At("CTOR_HEAD"),
             ordinal = 2,
             argsOnly = true

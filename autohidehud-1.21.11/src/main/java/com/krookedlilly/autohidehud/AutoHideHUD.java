@@ -48,6 +48,9 @@ public class AutoHideHUD {
     private static float alpha = 1f;
     private static float currentAlpha = 1f;
 
+    // Accessor so the mixin (item-render cancel) can read the current fade alpha.
+    public static float getAlpha() { return alpha; }
+
     protected static int tickDuration = 100;
     protected static int serverTickRate = 5;
 

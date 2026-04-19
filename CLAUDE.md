@@ -7,7 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This repo is a **Gradle composite build** of independent per-MC-version mod projects plus one shared `common/` library. Each mod project still has its own `gradlew` and settings.gradle — always `cd` into the project before running Gradle.
 
 - `common/` — **Plain Java library**, not a Minecraft mod. Holds version-independent code: the companion Swing UI (`common/companion/*`), its runtime `Config`, and the `PlayerData` / `InventoryItemData` / `StatusEffectData` DTOs serialized over TCP. Each mod project pulls this in via `includeBuild('../common')` + a `shade` dependency, and shades the result into its jar so standalone `java -jar` still works with no external library.
-- `autohidehud-1.21.4/` — Mixin targets the older `GuiGraphics` methods (`fill`, `fillGradient`, `drawString`, `blit`, `blitSprite` — no `RenderPipeline` arg). `hideContextualInfoBar` config dropped (layer added in 1.21.5). Items use threshold-cancel.
+- `autohidehud-1.21.0/`, `autohidehud-1.21.1/`, `autohidehud-1.21.2/`, `autohidehud-1.21.3/`, `autohidehud-1.21.4/`, `autohidehud-1.21.5/` — Share the same pre-`RenderPipeline` `GuiGraphics` API (all cloned from 1.21.4). Mixin targets `fill`/`fillGradient`/`drawString`/`blit`/`blitSprite` with plain int colors. `hideContextualInfoBar` config dropped (the `CONTEXTUAL_INFO_BAR` layer wasn't added until 1.21.6 — the earlier "1.21.5" note was wrong). Items use threshold-cancel. Differences to know:
+  - `clientData` run block doesn't exist in NeoForge 21.0–21.3 (removed from those `build.gradle`s). It's fine in 21.4+.
+  - `Inventory.selected` was made private in 1.21.5; that version uses `inventory.getSelectedSlot()` instead. 1.21.0–1.21.4 still read the field directly.
+  - NeoForge for 1.21.2 has no stable — `21.2.0-beta`/`21.2.1-beta` only; `autohidehud-1.21.2/` pins `21.2.1-beta`. MC 1.21.2 was itself hotfixed to 1.21.3 within days.
 - `autohidehud-1.21.6/`, `autohidehud-1.21.7/`, `autohidehud-1.21.8/` — Cloned from 1.21.8 (hybrid API: `RenderPipeline` on draw methods, no `submit*` batch API). Only `GuiGraphicsMixin` + `GuiTextRenderStateMixin` apply; `GuiRendererMixin` is dropped because its target (`submitBlitFromItemAtlas`) doesn't exist yet. Item fade uses threshold-cancel.
 - `autohidehud-1.21.9/`, `autohidehud-1.21.10/` — Full newer pipeline: `submit*` batched color API + `GuiRenderer` + `GuiTextRenderState`. Smooth fade including hotbar items via `GuiRendererMixin.submitBlitFromItemAtlas`.
 - `autohidehud-1.21.11/` — Same render pipeline as 1.21.10 but `ResourceLocation` class renamed to `Identifier` (Mojang adopted Fabric's naming). Source-level search-and-replace was the only delta.
@@ -27,7 +30,7 @@ When extending the companion, keep it runnable without Minecraft loaded — no M
 
 ### Mod (any version)
 ```bash
-cd autohidehud-1.21.10    # or autohidehud-1.21.8, autohidehud-1.21.4
+cd autohidehud-1.21.10    # or 1.21.0, 1.21.1, 1.21.2, 1.21.3, 1.21.4, 1.21.5, 1.21.6, 1.21.7, 1.21.8, 1.21.11
 ./gradlew build            # produces build/libs/autohidehud.jar
 ./gradlew runClient        # launch MC client with mod loaded
 ./gradlew runServer        # launch dedicated server
@@ -69,8 +72,8 @@ No test suite is wired up in any subproject.
 
   Touching HUD rendering in 1.21.10 almost always means editing these mixins, not event handlers.
 - **1.21.8** uses `GuiGraphicsMixin` + `GuiTextRenderStateMixin`. Drops `GuiRendererMixin` because its target (`submitBlitFromItemAtlas`) doesn't exist yet. GuiGraphics method signatures include a `RenderPipeline` first arg on `blit`/`fill`/`blitSprite` (unlike 1.21.4) but color is still a plain int, not a packed `submit*` call (unlike 1.21.10). Targets live in [autohidehud-1.21.8/src/main/java/com/krookedlilly/autohidehud/mixin/GuiGraphicsMixin.java](autohidehud-1.21.8/src/main/java/com/krookedlilly/autohidehud/mixin/GuiGraphicsMixin.java).
-- **1.21.4** uses `GuiGraphicsMixin` only, targeting the older `GuiGraphics` methods without `RenderPipeline` (the `GuiRenderer` / `GuiTextRenderState` classes don't exist yet). Targets in [autohidehud-1.21.4/src/main/java/com/krookedlilly/autohidehud/mixin/GuiGraphicsMixin.java](autohidehud-1.21.4/src/main/java/com/krookedlilly/autohidehud/mixin/GuiGraphicsMixin.java).
-- **Hotbar items** on 1.21.8 and 1.21.4 use threshold-cancel rather than smooth fade (3D item render pipeline ignores `setShaderColor`). Items pop out when alpha drops below ~0.05, after everything else has already faded near-invisible.
+- **1.21.0 – 1.21.5** all use `GuiGraphicsMixin` only, targeting the older `GuiGraphics` methods without `RenderPipeline` (the `GuiRenderer` / `GuiTextRenderState` classes don't exist yet). Targets in [autohidehud-1.21.4/src/main/java/com/krookedlilly/autohidehud/mixin/GuiGraphicsMixin.java](autohidehud-1.21.4/src/main/java/com/krookedlilly/autohidehud/mixin/GuiGraphicsMixin.java) — the other pre-1.21.6 versions share this mixin verbatim.
+- **Hotbar items** on 1.21.0–1.21.5 and 1.21.6–1.21.8 use threshold-cancel rather than smooth fade (3D item render pipeline ignores `setShaderColor`). Items pop out when alpha drops below ~0.05, after everything else has already faded near-invisible.
 
 ### Mod ↔ companion protocol
 Even though they ship in one jar, mod and companion still run in **separate JVMs** (the mod runs inside Minecraft's JVM; the companion is launched separately via `java -jar`). They communicate over TCP on localhost.
@@ -87,10 +90,16 @@ Even though they ship in one jar, mod and companion still run in **separate JVMs
 ### Shading Gson into the mod jar
 The `shade` Gradle configuration in `autohidehud-1.21.10/build.gradle` bundles Gson's classes into the root of the mod jar so the companion has Gson at standalone runtime. Minecraft already provides Gson at mod runtime, so the shaded copy is harmless there. If you add another runtime dependency needed by the companion standalone path, declare it as `shade` (not `implementation`) and it will be bundled the same way.
 
-### 1.21.4 mod-discovery quirks (FML 6.0.18)
-NeoForge 21.4 ships FML 6.0.18, which has two dev-mode gotchas that the 1.21.8/1.21.10 versions don't hit:
-1. **Split output dirs reject as "not a valid mod file"**: dev plugins normally pass `build/classes/java/main` and `build/resources/main` as two separate paths, but FML 6.0.18 validates each path independently and fails on whichever one lacks `META-INF/neoforge.mods.toml`. Fix: [autohidehud-1.21.4/build.gradle](autohidehud-1.21.4/build.gradle) sets `sourceSets.main.output.resourcesDir = sourceSets.main.java.destinationDirectory` so classes and resources land in one directory.
-2. **`modLoader`/`loaderVersion` required**: older NeoForge versions inferred these; 21.4 does not. The top of [autohidehud-1.21.4/src/main/resources/META-INF/neoforge.mods.toml](autohidehud-1.21.4/src/main/resources/META-INF/neoforge.mods.toml) declares `modLoader="javafml"` and `loaderVersion="[3,)"` explicitly. 1.21.8 and 1.21.10 can load without these — don't "simplify" 1.21.4 by removing them.
+### 1.21.0 – 1.21.5 mod-discovery quirks (FML 6.0.18 and earlier)
+NeoForge 21.0–21.5 all ship FML 6.0.x, which has two dev-mode gotchas that the 1.21.6+ versions don't hit:
+1. **Split output dirs reject as "not a valid mod file"**: dev plugins normally pass `build/classes/java/main` and `build/resources/main` as two separate paths, but FML 6.0.x validates each path independently and fails on whichever one lacks `META-INF/neoforge.mods.toml`. Fix: each of `autohidehud-1.21.0/` through `autohidehud-1.21.5/` `build.gradle` sets `sourceSets.main.output.resourcesDir = sourceSets.main.java.destinationDirectory` so classes and resources land in one directory.
+2. **`modLoader`/`loaderVersion` required**: 21.4+ no longer infers these. All 1.21.0–1.21.5 `neoforge.mods.toml` files declare `modLoader="javafml"` and `loaderVersion="[3,)"` explicitly. 1.21.6+ can load without them — don't "simplify" the earlier versions by removing them.
+
+### IModBusEvent must go on the mod bus (NeoForge 21.0 / 21.1)
+In 21.0/21.1, `@EventBusSubscriber`-registered classes whose `@SubscribeEvent` handlers take any `IModBusEvent` subtype (`ModConfigEvent.Loading`, `RegisterKeyMappingsEvent`, `RegisterRenderersEvent`, etc.) must declare `bus = EventBusSubscriber.Bus.MOD` explicitly. The bus does a runtime check and throws `"IModBusEvent events are not allowed on the common NeoForge bus"` otherwise. [autohidehud-1.21.0/src/main/java/com/krookedlilly/autohidehud/AutoHideHUDConfig.java](autohidehud-1.21.0/src/main/java/com/krookedlilly/autohidehud/AutoHideHUDConfig.java) and [AutoHideHUDKeyBindings.java](autohidehud-1.21.0/src/main/java/com/krookedlilly/autohidehud/AutoHideHUDKeyBindings.java) both carry the explicit `bus = MOD`. NeoForge 21.2+ relaxed this, but the annotation remains correct everywhere — applied to 1.21.0 through 1.21.5 uniformly.
+
+### Blit mixin target differences (1.21.0 / 1.21.1 vs 1.21.2+)
+The `Function<ResourceLocation, RenderType>`-based `blit`/`blitSprite` overloads — which the 1.21.4 mixin targets for `modifyBlitColor`, `modifyBlitColorWithLight`, and `modifyBlitSpriteColor` — **did not exist in MC 1.21 / 1.21.1**. Worse, no pre-1.21.2 `blit`/`blitSprite` variant accepts a tint/color arg at all (images were tinted via `RenderSystem.setShaderColor`, which mixins can't intercept). So `autohidehud-1.21.0/` and `autohidehud-1.21.1/` drop those three `@ModifyVariable` methods entirely — the rest of the HUD still fades through `fill`/`fillGradient`/`drawString` interception. Don't re-add them without verifying the signatures exist in that MC version's `GuiGraphics`.
 
 ### 26.x outstanding
 Three changes in Minecraft 26.1 block the existing porting pattern:
