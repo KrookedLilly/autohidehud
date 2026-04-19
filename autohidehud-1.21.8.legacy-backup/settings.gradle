@@ -1,0 +1,14 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
+// Share the version-independent companion/DTO code across every MC version via a composite build.
+// 1.21.8 doesn't currently ship companion/data-server features; wiring the build anyway so that
+// adding them later is just a dependency change, not project restructuring.
+includeBuild('../common')

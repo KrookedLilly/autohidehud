@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "package": "com.krookedlilly.autohidehud.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+  ],
+  "client": [
+    "GuiGraphicsMixin",
+    "GuiTextRenderStateMixin",
+    "GuiRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

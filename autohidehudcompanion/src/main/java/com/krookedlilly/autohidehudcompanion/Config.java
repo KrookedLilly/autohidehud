@@ -8,7 +8,7 @@ public class Config {
     private static final String DEFAULT_CONFIG_PATH = "/config/default.properties";
 
     // Default values
-    private static final int DEFAULT_PORT = 25592;
+    private static final int DEFAULT_PORT = 25922;
     private static final String DEFAULT_FOCUSED_BG_COLOR = "#000000";
     private static final int DEFAULT_FOCUSED_BG_OPACITY = 100;
     private static final String DEFAULT_NOT_FOCUSED_BG_COLOR = "#000000";

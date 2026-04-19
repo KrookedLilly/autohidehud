@@ -1,0 +1,36 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = 'com.krookedlilly.autohidehud'
+version = '1.0.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    withSourcesJar()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Compile-time dep only — the consuming mod jars shade Gson themselves,
+    // so common/ can rely on it being present at runtime without bundling it.
+    compileOnly 'com.google.code.gson:gson:2.10.1'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
