@@ -60,11 +60,11 @@ public class AutoHideHUD {
     public static boolean wasSleeping = false;
 
     // posePushed is set in onRenderHUDPre when we push the pose matrix for a
-    // HUD-position offset, and consumed in onRenderHUDPost to pop it. The
-    // single-boolean approach is only safe because this mod never cancels
-    // RenderGuiLayerEvent.Pre (so Post is guaranteed to fire) and layers do
-    // not nest. If a future change ever cancels Pre, this needs to become a
-    // ResourceLocation-keyed map so the right pushes get popped.
+    // HUD-position offset, and consumed in onRenderHUDPost (or earlier in
+    // Pre if Pre is cancelled, since NeoForge skips Post for cancelled Pre).
+    // The single-boolean approach is safe because layers do not nest. If a
+    // future change introduces nested layer rendering, this needs to become
+    // a ResourceLocation-keyed map so the right pushes get popped.
     private static boolean posePushed = false;
     private static final int[] NO_OFFSET = {0, 0};
 
@@ -387,6 +387,12 @@ public class AutoHideHUD {
             // blend. Source alpha is effectively ignored — setShaderColor can't fade it.
             // Cancel the layer render outright when it's configured to hide.
             if (event.getName().equals(VanillaGuiLayers.CROSSHAIR)) {
+                // Pose-pop here too: NeoForge skips Post when Pre is cancelled,
+                // so onRenderHUDPost wouldn't run, leaking our earlier pushPose.
+                if (posePushed) {
+                    event.getGuiGraphics().pose().popPose();
+                    posePushed = false;
+                }
                 event.setCanceled(true);
                 return;
             }
