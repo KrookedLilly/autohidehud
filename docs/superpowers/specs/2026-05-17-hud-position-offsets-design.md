@@ -77,7 +77,9 @@ The NeoForge `ConfigurationScreen` auto-generates UI from the spec — no separa
 
 ### Render flow
 
-In `AutoHideHUD.onRenderHUDPre(RenderGuiLayerEvent.Pre event)`, after the existing alpha logic:
+**Pose push must run before any existing logic in `onRenderHUDPre`** — the current handler has multiple early `return` paths inside the fade branch, and offsets must apply independently of whether auto-hiding is enabled (it's a positioning feature, not a fade feature). So the placement is:
+
+In `AutoHideHUD.onRenderHUDPre(RenderGuiLayerEvent.Pre event)`, as the **very first** statements — *before* the existing `if (!enableAutoHiding) return;` gate:
 
 ```java
 int[] off = getLayerOffset(event.getName());   // {dx, dy}
@@ -87,18 +89,24 @@ if (off[0] != 0 || off[1] != 0) {
     pose.translate(off[0], off[1]);
     posePushed = true;                          // instance field
 }
+// ...existing alpha logic follows, untouched...
 ```
 
-In `AutoHideHUD.onRenderHUDPost(RenderGuiLayerEvent.Post event)`, before the existing `alpha = 1f` reset:
+In `AutoHideHUD.onRenderHUDPost(RenderGuiLayerEvent.Post event)`, before the existing `alpha = 1f` reset (Post has no early returns, so placement here is safe):
 
 ```java
 if (posePushed) {
     event.getGuiGraphics().pose().popMatrix();
     posePushed = false;
 }
+// ...existing alpha = 1f reset follows...
 ```
 
 `getLayerOffset(name)` returns the sum of `globalOffset` (when the layer is "core HUD") plus the matching per-element offset. It uses the same layer-to-config-key grouping that `shouldHideLayer()` uses, including AppleSkin layer routing (see next section).
+
+**`CONTEXTUAL_INFO_BAR_BACKGROUND` routes to the same `contextualInfoBarOffset` as `CONTEXTUAL_INFO_BAR`** — otherwise the background would visually detach from the bar.
+
+**Offsets apply regardless of `enableAutoHiding`.** A user who disables fade behavior can still use the position-offset feature.
 
 ### AppleSkin layer grouping (extended to all versions)
 
