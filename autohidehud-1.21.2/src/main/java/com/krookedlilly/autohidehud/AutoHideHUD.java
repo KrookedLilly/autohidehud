@@ -316,10 +316,20 @@ public class AutoHideHUD {
     @SubscribeEvent
     public void onRenderHUDPre(RenderGuiLayerEvent.Pre event) {
         int[] off = getLayerOffset(event.getName());
-        if (off[0] != 0 || off[1] != 0) {
+        int rot = getLayerRotation(event.getName());
+        if (off[0] != 0 || off[1] != 0 || rot != 0) {
             var pose = event.getGuiGraphics().pose();
             pose.pushPose();
-            pose.translate(off[0], off[1], 0);
+            if (rot != 0) {
+                // Rotate around screen center, then apply user offset on top.
+                int cx = Minecraft.getInstance().getWindow().getGuiScaledWidth() / 2;
+                int cy = Minecraft.getInstance().getWindow().getGuiScaledHeight() / 2;
+                pose.translate(off[0] + cx, off[1] + cy, 0);
+                pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(rot));
+                pose.translate(-cx, -cy, 0);
+            } else {
+                pose.translate(off[0], off[1], 0);
+            }
             posePushed = true;
         }
 
@@ -432,6 +442,52 @@ public class AutoHideHUD {
             return new int[]{gx, gy};
 
         return NO_OFFSET;
+    }
+
+    // Returns the effective rotation (in degrees, 0-360) for a given HUD layer.
+    // effectiveRotation = (globalRotation + perElementRotation) mod 360 for "core HUD" layers;
+    // crosshair, chat, status effects get per-element only. Same grouping as getLayerOffset.
+    private int getLayerRotation(ResourceLocation layerName) {
+        int gr = AutoHideHUDConfig.globalRotation.get();
+
+        if (layerName.equals(VanillaGuiLayers.HOTBAR))
+            return (gr + AutoHideHUDConfig.hotbarRotation.get()) % 360;
+        if (layerName.equals(VanillaGuiLayers.PLAYER_HEALTH)
+                || layerName.toString().equals("appleskin:health_offset")
+                || layerName.toString().equals("appleskin:health_restored"))
+            return (gr + AutoHideHUDConfig.healthBarRotation.get()) % 360;
+        if (layerName.equals(VanillaGuiLayers.ARMOR_LEVEL))
+            return (gr + AutoHideHUDConfig.armorRotation.get()) % 360;
+        if (layerName.equals(VanillaGuiLayers.FOOD_LEVEL)
+                || layerName.toString().equals("appleskin:hunger_restored")
+                || layerName.toString().equals("appleskin:food_offset")
+                || layerName.toString().equals("appleskin:saturation_level")
+                || layerName.toString().equals("appleskin:exhaustion_level"))
+            return (gr + AutoHideHUDConfig.foodRotation.get()) % 360;
+        if (layerName.equals(VanillaGuiLayers.AIR_LEVEL))
+            return (gr + AutoHideHUDConfig.airRotation.get()) % 360;
+        if (layerName.equals(VanillaGuiLayers.VEHICLE_HEALTH))
+            return (gr + AutoHideHUDConfig.vehicleHealthRotation.get()) % 360;
+        if (layerName.equals(VanillaGuiLayers.EXPERIENCE_LEVEL)
+                || layerName.equals(VanillaGuiLayers.EXPERIENCE_BAR)
+                || layerName.equals(VanillaGuiLayers.JUMP_METER))
+            return (gr + AutoHideHUDConfig.experienceLevelRotation.get()) % 360;
+        if (layerName.equals(VanillaGuiLayers.SELECTED_ITEM_NAME))
+            return (gr + AutoHideHUDConfig.selectedItemNameRotation.get()) % 360;
+
+        // Not "core HUD" — no global, only per-element
+        if (layerName.equals(VanillaGuiLayers.EFFECTS))
+            return AutoHideHUDConfig.statusEffectsRotation.get() % 360;
+        if (layerName.equals(VanillaGuiLayers.CHAT))
+            return AutoHideHUDConfig.chatRotation.get() % 360;
+        if (layerName.equals(VanillaGuiLayers.CROSSHAIR))
+            return AutoHideHUDConfig.crosshairRotation.get() % 360;
+
+        // additionalLayerIds get global only
+        if (AutoHideHUDConfig.additionalLayerIds.get().contains(layerName.toString()))
+            return gr % 360;
+
+        return 0;
     }
 
     private boolean shouldHideLayer(ResourceLocation layerName) {

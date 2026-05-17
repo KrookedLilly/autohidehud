@@ -58,6 +58,20 @@ public class AutoHideHUDConfig {
     public static final ModConfigSpec.IntValue crosshairOffsetX;
     public static final ModConfigSpec.IntValue crosshairOffsetY;
 
+    // HUD Rotation Settings (degrees, 0-360)
+    public static final ModConfigSpec.IntValue globalRotation;
+    public static final ModConfigSpec.IntValue hotbarRotation;
+    public static final ModConfigSpec.IntValue healthBarRotation;
+    public static final ModConfigSpec.IntValue armorRotation;
+    public static final ModConfigSpec.IntValue foodRotation;
+    public static final ModConfigSpec.IntValue airRotation;
+    public static final ModConfigSpec.IntValue vehicleHealthRotation;
+    public static final ModConfigSpec.IntValue experienceLevelRotation;
+    public static final ModConfigSpec.IntValue selectedItemNameRotation;
+    public static final ModConfigSpec.IntValue statusEffectsRotation;
+    public static final ModConfigSpec.IntValue chatRotation;
+    public static final ModConfigSpec.IntValue crosshairRotation;
+
     // Reveal Options
     public static final ModConfigSpec.IntValue revealWhenPlayerHealthChangedBelow;
     public static final ModConfigSpec.IntValue revealWhenPlayerFoodChangedBelow;
@@ -229,7 +243,10 @@ public class AutoHideHUDConfig {
         BUILDER.pop();
 
         // HUD Position Section
-        BUILDER.comment("HUD Position - Shift HUD elements by X/Y pixels (screen coords: positive X moves right, positive Y moves down). Note: crosshair, chat, and status effects are NOT affected by globalOffset; they only respond to their own per-element offsets.").push("hudPositionGroup");
+        BUILDER.comment("HUD Position - Translate (X/Y) and rotate HUD elements. Crosshair, chat, and status effects are NOT affected by globalOffset/globalRotation; they only respond to their own per-element values.").push("hudPositionGroup");
+
+        // Translation subgroup
+        BUILDER.comment("Translation - Shift HUD elements by X/Y pixels (screen coords: positive X moves right, positive Y moves down).").push("translation");
 
         globalOffsetX = BUILDER
                 .comment("Global X offset applied to all core HUD elements (hotbar, health, armor, food, air, vehicle health, xp level, selected item name)")
@@ -261,6 +278,26 @@ public class AutoHideHUDConfig {
         chatOffsetY = BUILDER.comment("Y offset for chat; global offset does NOT apply").defineInRange("chatOffsetY", 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
         crosshairOffsetX = BUILDER.comment("X offset for crosshair; global offset does NOT apply").defineInRange("crosshairOffsetX", 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
         crosshairOffsetY = BUILDER.comment("Y offset for crosshair; global offset does NOT apply").defineInRange("crosshairOffsetY", 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
+
+        BUILDER.pop();
+
+        // Rotation subgroup
+        BUILDER.comment("Rotation - Rotate HUD elements clockwise in degrees (0-360). Each element rotates around the screen center; then its translation offset is applied on top.").push("rotation");
+
+        globalRotation = BUILDER.comment("Global rotation (degrees) applied to all core HUD elements").defineInRange("globalRotation", 0, 0, 360);
+        hotbarRotation = BUILDER.comment("Per-element rotation added on top of global").defineInRange("hotbarRotation", 0, 0, 360);
+        healthBarRotation = BUILDER.comment("Per-element rotation added on top of global; also applied to AppleSkin health overlays").defineInRange("healthBarRotation", 0, 0, 360);
+        armorRotation = BUILDER.comment("Per-element rotation added on top of global").defineInRange("armorRotation", 0, 0, 360);
+        foodRotation = BUILDER.comment("Per-element rotation added on top of global; also applied to AppleSkin food/saturation overlays").defineInRange("foodRotation", 0, 0, 360);
+        airRotation = BUILDER.comment("Per-element rotation added on top of global").defineInRange("airRotation", 0, 0, 360);
+        vehicleHealthRotation = BUILDER.comment("Per-element rotation added on top of global").defineInRange("vehicleHealthRotation", 0, 0, 360);
+        experienceLevelRotation = BUILDER.comment("Per-element rotation added on top of global").defineInRange("experienceLevelRotation", 0, 0, 360);
+        selectedItemNameRotation = BUILDER.comment("Per-element rotation added on top of global").defineInRange("selectedItemNameRotation", 0, 0, 360);
+        statusEffectsRotation = BUILDER.comment("Rotation for status effects; global rotation does NOT apply").defineInRange("statusEffectsRotation", 0, 0, 360);
+        chatRotation = BUILDER.comment("Rotation for chat; global rotation does NOT apply").defineInRange("chatRotation", 0, 0, 360);
+        crosshairRotation = BUILDER.comment("Rotation for crosshair; global rotation does NOT apply").defineInRange("crosshairRotation", 0, 0, 360);
+
+        BUILDER.pop();
 
         BUILDER.pop();
 
