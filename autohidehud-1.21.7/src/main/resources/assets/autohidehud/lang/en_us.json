@@ -87,5 +87,20 @@
   "autohidehud.configuration.crosshairOffsetX": "Crosshair X Offset",
   "autohidehud.configuration.crosshairOffsetY": "Crosshair Y Offset",
   "autohidehud.configuration.contextualInfoBarOffsetX": "Contextual Bar X Offset",
-  "autohidehud.configuration.contextualInfoBarOffsetY": "Contextual Bar Y Offset"
+  "autohidehud.configuration.contextualInfoBarOffsetY": "Contextual Bar Y Offset",
+  "autohidehud.configuration.translation": "Translation (X / Y)",
+  "autohidehud.configuration.rotation": "Rotation",
+  "autohidehud.configuration.globalRotation": "Global Rotation",
+  "autohidehud.configuration.hotbarRotation": "Hotbar Rotation",
+  "autohidehud.configuration.healthBarRotation": "Health Rotation",
+  "autohidehud.configuration.armorRotation": "Armor Rotation",
+  "autohidehud.configuration.foodRotation": "Food Rotation",
+  "autohidehud.configuration.airRotation": "Air Rotation",
+  "autohidehud.configuration.vehicleHealthRotation": "Mount Health Rotation",
+  "autohidehud.configuration.experienceLevelRotation": "XP Level Rotation",
+  "autohidehud.configuration.selectedItemNameRotation": "Item Name Rotation",
+  "autohidehud.configuration.statusEffectsRotation": "Status Effects Rotation",
+  "autohidehud.configuration.chatRotation": "Chat Rotation",
+  "autohidehud.configuration.crosshairRotation": "Crosshair Rotation",
+  "autohidehud.configuration.contextualInfoBarRotation": "Contextual Bar Rotation"
 }
