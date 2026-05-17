@@ -55,6 +55,14 @@ public class AutoHideHUD {
     public static float hotbarAlpha = 1f;
     public static boolean wasSleeping = false;
 
+    // posePushed is set in onRenderHUDPre when we push the pose matrix for a
+    // HUD-position offset, and consumed in onRenderHUDPost to pop it. The
+    // single-boolean approach is only safe because this mod never cancels
+    // RenderGuiLayerEvent.Pre (so Post is guaranteed to fire) and layers do
+    // not nest. If a future change ever cancels Pre, this needs to become a
+    // ResourceLocation-keyed map so the right pushes get popped.
+    private boolean posePushed = false;
+
     public AutoHideHUD(IEventBus modBus, ModContainer modContainer) {
         NeoForge.EVENT_BUS.register(this);
         modContainer.registerConfig(ModConfig.Type.CLIENT, AutoHideHUDConfig.SPEC);
@@ -143,7 +151,7 @@ public class AutoHideHUD {
             TEMP_PLAYER_DATA.selectedHotbarSlot = inventory.getSelectedSlot();
             TEMP_PLAYER_DATA.vehicleHealth = .01f;
             TEMP_PLAYER_DATA.maxVehicleHealth = .01f;
-            TEMP_PLAYER_DATA.inMenu = minecraft.screen != null && player.getBedOrientation() == null && (minecraft.screen.isInGameUi() || minecraft.screen.isPauseScreen());
+            TEMP_PLAYER_DATA.inMenu = minecraft.screen != null && player.getBedOrientation() == null;
             TEMP_PLAYER_DATA.x = player.getX();
             TEMP_PLAYER_DATA.y = player.getY();
             TEMP_PLAYER_DATA.z = player.getZ();
@@ -302,6 +310,14 @@ public class AutoHideHUD {
 
     @SubscribeEvent
     public void onRenderHUDPre(RenderGuiLayerEvent.Pre event) {
+        int[] off = getLayerOffset(event.getName());
+        if (off[0] != 0 || off[1] != 0) {
+            var pose = event.getGuiGraphics().pose();
+            pose.pushMatrix();
+            pose.translate(off[0], off[1]);
+            posePushed = true;
+        }
+
         if (!AutoHideHUDConfig.enableAutoHiding.get()) return;
         if (!preventHide && currentTick - lastUpdatedTick > tickDuration) {
             float targetAlpha = (float) AutoHideHUDConfig.targetOpacity.getAsDouble();
@@ -356,6 +372,67 @@ public class AutoHideHUD {
             alpha = hotbarAlpha = currentAlpha = 1f;
             fadeStartTime = -1;
         }
+    }
+
+    @SubscribeEvent
+    public void onRenderHUDPost(RenderGuiLayerEvent.Post event) {
+        if (posePushed) {
+            event.getGuiGraphics().pose().popMatrix();
+            posePushed = false;
+        }
+        // Reset alpha so the GuiGraphics color-modifying mixin no-ops on UI rendered after
+        // this layer (JEI/REI overlays). alpha is read per-draw-call so a per-layer reset works.
+        // hotbarAlpha is intentionally NOT reset here: hotbar item draws are queued during
+        // the HOTBAR layer's render but flushed later via GuiRenderer.submitBlitFromItemAtlas,
+        // and our GuiRendererMixin reads hotbarAlpha at flush time. inMenu guards JEI items.
+        alpha = 1f;
+    }
+
+    // Returns the effective (x, y) offset for a given HUD layer as an int[2].
+    // effectiveOffset = globalOffset (when layer is "core HUD") + per-element override.
+    // Crosshair, chat, status effects are not in "core HUD" — they get per-element only.
+    private int[] getLayerOffset(ResourceLocation layerName) {
+        int gx = AutoHideHUDConfig.globalOffsetX.get();
+        int gy = AutoHideHUDConfig.globalOffsetY.get();
+
+        if (layerName.equals(VanillaGuiLayers.HOTBAR))
+            return new int[]{gx + AutoHideHUDConfig.hotbarOffsetX.get(), gy + AutoHideHUDConfig.hotbarOffsetY.get()};
+        if (layerName.equals(VanillaGuiLayers.PLAYER_HEALTH)
+                || layerName.toString().equals("appleskin:health_offset")
+                || layerName.toString().equals("appleskin:health_restored"))
+            return new int[]{gx + AutoHideHUDConfig.healthBarOffsetX.get(), gy + AutoHideHUDConfig.healthBarOffsetY.get()};
+        if (layerName.equals(VanillaGuiLayers.ARMOR_LEVEL))
+            return new int[]{gx + AutoHideHUDConfig.armorOffsetX.get(), gy + AutoHideHUDConfig.armorOffsetY.get()};
+        if (layerName.equals(VanillaGuiLayers.FOOD_LEVEL)
+                || layerName.toString().equals("appleskin:hunger_restored")
+                || layerName.toString().equals("appleskin:food_offset")
+                || layerName.toString().equals("appleskin:saturation_level")
+                || layerName.toString().equals("appleskin:exhaustion_level"))
+            return new int[]{gx + AutoHideHUDConfig.foodOffsetX.get(), gy + AutoHideHUDConfig.foodOffsetY.get()};
+        if (layerName.equals(VanillaGuiLayers.AIR_LEVEL))
+            return new int[]{gx + AutoHideHUDConfig.airOffsetX.get(), gy + AutoHideHUDConfig.airOffsetY.get()};
+        if (layerName.equals(VanillaGuiLayers.VEHICLE_HEALTH))
+            return new int[]{gx + AutoHideHUDConfig.vehicleHealthOffsetX.get(), gy + AutoHideHUDConfig.vehicleHealthOffsetY.get()};
+        if (layerName.equals(VanillaGuiLayers.EXPERIENCE_LEVEL))
+            return new int[]{gx + AutoHideHUDConfig.experienceLevelOffsetX.get(), gy + AutoHideHUDConfig.experienceLevelOffsetY.get()};
+        if (layerName.equals(VanillaGuiLayers.CONTEXTUAL_INFO_BAR) || layerName.equals(VanillaGuiLayers.CONTEXTUAL_INFO_BAR_BACKGROUND))
+            return new int[]{gx + AutoHideHUDConfig.contextualInfoBarOffsetX.get(), gy + AutoHideHUDConfig.contextualInfoBarOffsetY.get()};
+        if (layerName.equals(VanillaGuiLayers.SELECTED_ITEM_NAME))
+            return new int[]{gx + AutoHideHUDConfig.selectedItemNameOffsetX.get(), gy + AutoHideHUDConfig.selectedItemNameOffsetY.get()};
+
+        // Not "core HUD" — no global, only per-element
+        if (layerName.equals(VanillaGuiLayers.EFFECTS))
+            return new int[]{AutoHideHUDConfig.statusEffectsOffsetX.get(), AutoHideHUDConfig.statusEffectsOffsetY.get()};
+        if (layerName.equals(VanillaGuiLayers.CHAT))
+            return new int[]{AutoHideHUDConfig.chatOffsetX.get(), AutoHideHUDConfig.chatOffsetY.get()};
+        if (layerName.equals(VanillaGuiLayers.CROSSHAIR))
+            return new int[]{AutoHideHUDConfig.crosshairOffsetX.get(), AutoHideHUDConfig.crosshairOffsetY.get()};
+
+        // additionalLayerIds get global only
+        if (AutoHideHUDConfig.additionalLayerIds.get().contains(layerName.toString()))
+            return new int[]{gx, gy};
+
+        return new int[]{0, 0};
     }
 
     private boolean shouldHideLayer(ResourceLocation layerName) {
