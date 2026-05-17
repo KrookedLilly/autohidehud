@@ -237,34 +237,34 @@ public class AutoHideHUDConfig {
 
         globalOffsetX = BUILDER
                 .comment("Global X offset applied to all core HUD elements (hotbar, health, armor, food, air, vehicle health, xp level, selected item name)")
-                .defineInRange("globalOffsetX", 0, -1000, 1000);
+                .defineInRange("globalOffsetX", 0, -100, 100);
 
         globalOffsetY = BUILDER
                 .comment("Global Y offset applied to all core HUD elements (positive moves down toward bottom of screen)")
-                .defineInRange("globalOffsetY", 0, -1000, 1000);
+                .defineInRange("globalOffsetY", 0, -100, 100);
 
-        hotbarOffsetX = BUILDER.comment("Per-element X offset added on top of global").defineInRange("hotbarOffsetX", 0, -1000, 1000);
-        hotbarOffsetY = BUILDER.comment("Per-element Y offset added on top of global").defineInRange("hotbarOffsetY", 0, -1000, 1000);
-        healthBarOffsetX = BUILDER.comment("Per-element X offset added on top of global; also applied to AppleSkin health overlays").defineInRange("healthBarOffsetX", 0, -1000, 1000);
-        healthBarOffsetY = BUILDER.comment("Per-element Y offset added on top of global; also applied to AppleSkin health overlays").defineInRange("healthBarOffsetY", 0, -1000, 1000);
-        armorOffsetX = BUILDER.comment("Per-element X offset added on top of global").defineInRange("armorOffsetX", 0, -1000, 1000);
-        armorOffsetY = BUILDER.comment("Per-element Y offset added on top of global").defineInRange("armorOffsetY", 0, -1000, 1000);
-        foodOffsetX = BUILDER.comment("Per-element X offset added on top of global; also applied to AppleSkin food/saturation overlays").defineInRange("foodOffsetX", 0, -1000, 1000);
-        foodOffsetY = BUILDER.comment("Per-element Y offset added on top of global; also applied to AppleSkin food/saturation overlays").defineInRange("foodOffsetY", 0, -1000, 1000);
-        airOffsetX = BUILDER.comment("Per-element X offset added on top of global").defineInRange("airOffsetX", 0, -1000, 1000);
-        airOffsetY = BUILDER.comment("Per-element Y offset added on top of global").defineInRange("airOffsetY", 0, -1000, 1000);
-        vehicleHealthOffsetX = BUILDER.comment("Per-element X offset added on top of global").defineInRange("vehicleHealthOffsetX", 0, -1000, 1000);
-        vehicleHealthOffsetY = BUILDER.comment("Per-element Y offset added on top of global").defineInRange("vehicleHealthOffsetY", 0, -1000, 1000);
-        experienceLevelOffsetX = BUILDER.comment("Per-element X offset added on top of global").defineInRange("experienceLevelOffsetX", 0, -1000, 1000);
-        experienceLevelOffsetY = BUILDER.comment("Per-element Y offset added on top of global").defineInRange("experienceLevelOffsetY", 0, -1000, 1000);
-        selectedItemNameOffsetX = BUILDER.comment("Per-element X offset added on top of global").defineInRange("selectedItemNameOffsetX", 0, -1000, 1000);
-        selectedItemNameOffsetY = BUILDER.comment("Per-element Y offset added on top of global").defineInRange("selectedItemNameOffsetY", 0, -1000, 1000);
-        statusEffectsOffsetX = BUILDER.comment("X offset for status effects (top-right cluster); global offset does NOT apply").defineInRange("statusEffectsOffsetX", 0, -1000, 1000);
-        statusEffectsOffsetY = BUILDER.comment("Y offset for status effects (top-right cluster); global offset does NOT apply").defineInRange("statusEffectsOffsetY", 0, -1000, 1000);
-        chatOffsetX = BUILDER.comment("X offset for chat; global offset does NOT apply").defineInRange("chatOffsetX", 0, -1000, 1000);
-        chatOffsetY = BUILDER.comment("Y offset for chat; global offset does NOT apply").defineInRange("chatOffsetY", 0, -1000, 1000);
-        crosshairOffsetX = BUILDER.comment("X offset for crosshair; global offset does NOT apply").defineInRange("crosshairOffsetX", 0, -1000, 1000);
-        crosshairOffsetY = BUILDER.comment("Y offset for crosshair; global offset does NOT apply").defineInRange("crosshairOffsetY", 0, -1000, 1000);
+        hotbarOffsetX = BUILDER.comment("Per-element X offset added on top of global").defineInRange("hotbarOffsetX", 0, -100, 100);
+        hotbarOffsetY = BUILDER.comment("Per-element Y offset added on top of global").defineInRange("hotbarOffsetY", 0, -100, 100);
+        healthBarOffsetX = BUILDER.comment("Per-element X offset added on top of global; also applied to AppleSkin health overlays").defineInRange("healthBarOffsetX", 0, -100, 100);
+        healthBarOffsetY = BUILDER.comment("Per-element Y offset added on top of global; also applied to AppleSkin health overlays").defineInRange("healthBarOffsetY", 0, -100, 100);
+        armorOffsetX = BUILDER.comment("Per-element X offset added on top of global").defineInRange("armorOffsetX", 0, -100, 100);
+        armorOffsetY = BUILDER.comment("Per-element Y offset added on top of global").defineInRange("armorOffsetY", 0, -100, 100);
+        foodOffsetX = BUILDER.comment("Per-element X offset added on top of global; also applied to AppleSkin food/saturation overlays").defineInRange("foodOffsetX", 0, -100, 100);
+        foodOffsetY = BUILDER.comment("Per-element Y offset added on top of global; also applied to AppleSkin food/saturation overlays").defineInRange("foodOffsetY", 0, -100, 100);
+        airOffsetX = BUILDER.comment("Per-element X offset added on top of global").defineInRange("airOffsetX", 0, -100, 100);
+        airOffsetY = BUILDER.comment("Per-element Y offset added on top of global").defineInRange("airOffsetY", 0, -100, 100);
+        vehicleHealthOffsetX = BUILDER.comment("Per-element X offset added on top of global").defineInRange("vehicleHealthOffsetX", 0, -100, 100);
+        vehicleHealthOffsetY = BUILDER.comment("Per-element Y offset added on top of global").defineInRange("vehicleHealthOffsetY", 0, -100, 100);
+        experienceLevelOffsetX = BUILDER.comment("Per-element X offset added on top of global").defineInRange("experienceLevelOffsetX", 0, -100, 100);
+        experienceLevelOffsetY = BUILDER.comment("Per-element Y offset added on top of global").defineInRange("experienceLevelOffsetY", 0, -100, 100);
+        selectedItemNameOffsetX = BUILDER.comment("Per-element X offset added on top of global").defineInRange("selectedItemNameOffsetX", 0, -100, 100);
+        selectedItemNameOffsetY = BUILDER.comment("Per-element Y offset added on top of global").defineInRange("selectedItemNameOffsetY", 0, -100, 100);
+        statusEffectsOffsetX = BUILDER.comment("X offset for status effects (top-right cluster); global offset does NOT apply").defineInRange("statusEffectsOffsetX", 0, -100, 100);
+        statusEffectsOffsetY = BUILDER.comment("Y offset for status effects (top-right cluster); global offset does NOT apply").defineInRange("statusEffectsOffsetY", 0, -100, 100);
+        chatOffsetX = BUILDER.comment("X offset for chat; global offset does NOT apply").defineInRange("chatOffsetX", 0, -100, 100);
+        chatOffsetY = BUILDER.comment("Y offset for chat; global offset does NOT apply").defineInRange("chatOffsetY", 0, -100, 100);
+        crosshairOffsetX = BUILDER.comment("X offset for crosshair; global offset does NOT apply").defineInRange("crosshairOffsetX", 0, -100, 100);
+        crosshairOffsetY = BUILDER.comment("Y offset for crosshair; global offset does NOT apply").defineInRange("crosshairOffsetY", 0, -100, 100);
 
         BUILDER.pop();
 

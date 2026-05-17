@@ -1,16 +1,13 @@
 {
   "autohidehud.keybindings.revealkey": "Reveal HUD",
-
   "autohidehud.configuration.title": "Auto Hide HUD Configs",
   "autohidehud.configuration.section.autohidehud.common.toml": "Auto Hide HUD Configs",
   "autohidehud.configuration.section.autohidehud.common.toml.title": "Auto Hide HUD Configs",
-
   "autohidehud.configuration.generalGroup": "General Settings",
   "autohidehud.configuration.enableAutoHiding": "Enabled",
   "autohidehud.configuration.ticksBeforeHiding": "Time Before Hiding",
   "autohidehud.configuration.fadeOutSpeed": "Fade Out Duration",
   "autohidehud.configuration.targetOpacity": "Target Opacity",
-
   "autohidehud.configuration.hideOptionsGroup": "Elements To Hide",
   "autohidehud.configuration.hideContextualInfoBar": "Hide Contextual Bar",
   "autohidehud.configuration.hideSelectedItemName": "Hide Selected Item Name",
@@ -26,7 +23,6 @@
   "autohidehud.configuration.hideChatMessages": "Hide Chat Messages",
   "autohidehud.configuration.hideSleepOverlay": "Hide Sleep Overlay Screen",
   "autohidehud.configuration.additionalLayerIds": "Custom GUI Layer Ids",
-
   "autohidehud.configuration.revealConditionsGroup": "Reveal Conditions",
   "autohidehud.configuration.revealWhenPlayerHealthChangedBelow": "Show While Health Below",
   "autohidehud.configuration.revealWhenPlayerFoodChangedBelow": "Show While Food Below",
@@ -40,7 +36,6 @@
   "autohidehud.configuration.revealOnShowMenu": "Show In Menu",
   "autohidehud.configuration.returnToStateFromMenu": "Instant Fade From Menu",
   "autohidehud.configuration.revealIfInCreative": "Reveal While In Creative",
-
   "autohidehud.configuration.dataServerGroup": "Companion App Settings",
   "autohidehud.configuration.autoStartPlayerDataServer": "Auto Start Data Server",
   "autohidehud.configuration.playerDataServerPort": "Data Server Port",
@@ -65,5 +60,32 @@
   "autohidehud.configuration.focusedBackgroundColor": "Focused BG Color",
   "autohidehud.configuration.focusedBackgroundOpacity": "Focused BG Opacity",
   "autohidehud.configuration.notFocusedBackgroundColor": "Not Focused BG Color",
-  "autohidehud.configuration.notFocusedBackgroundOpacity": "Not Focused BG Opacity"
+  "autohidehud.configuration.notFocusedBackgroundOpacity": "Not Focused BG Opacity",
+  "autohidehud.configuration.hudPositionGroup": "HUD Position",
+  "autohidehud.configuration.globalOffsetX": "Global X Offset",
+  "autohidehud.configuration.globalOffsetY": "Global Y Offset",
+  "autohidehud.configuration.hotbarOffsetX": "Hotbar X Offset",
+  "autohidehud.configuration.hotbarOffsetY": "Hotbar Y Offset",
+  "autohidehud.configuration.healthBarOffsetX": "Health X Offset",
+  "autohidehud.configuration.healthBarOffsetY": "Health Y Offset",
+  "autohidehud.configuration.armorOffsetX": "Armor X Offset",
+  "autohidehud.configuration.armorOffsetY": "Armor Y Offset",
+  "autohidehud.configuration.foodOffsetX": "Food X Offset",
+  "autohidehud.configuration.foodOffsetY": "Food Y Offset",
+  "autohidehud.configuration.airOffsetX": "Air X Offset",
+  "autohidehud.configuration.airOffsetY": "Air Y Offset",
+  "autohidehud.configuration.vehicleHealthOffsetX": "Mount Health X Offset",
+  "autohidehud.configuration.vehicleHealthOffsetY": "Mount Health Y Offset",
+  "autohidehud.configuration.experienceLevelOffsetX": "XP Level X Offset",
+  "autohidehud.configuration.experienceLevelOffsetY": "XP Level Y Offset",
+  "autohidehud.configuration.selectedItemNameOffsetX": "Item Name X Offset",
+  "autohidehud.configuration.selectedItemNameOffsetY": "Item Name Y Offset",
+  "autohidehud.configuration.statusEffectsOffsetX": "Status Effects X Offset",
+  "autohidehud.configuration.statusEffectsOffsetY": "Status Effects Y Offset",
+  "autohidehud.configuration.chatOffsetX": "Chat X Offset",
+  "autohidehud.configuration.chatOffsetY": "Chat Y Offset",
+  "autohidehud.configuration.crosshairOffsetX": "Crosshair X Offset",
+  "autohidehud.configuration.crosshairOffsetY": "Crosshair Y Offset",
+  "autohidehud.configuration.contextualInfoBarOffsetX": "Contextual Bar X Offset",
+  "autohidehud.configuration.contextualInfoBarOffsetY": "Contextual Bar Y Offset"
 }
