@@ -12,15 +12,17 @@
 
 ---
 
-## Pre-flight findings (already verified in spec session)
+## Pre-flight findings (verified in spec + plan-review sessions)
 
-| MC versions | `pose()` returns | Push/pop methods | `translate` args | `CONTEXTUAL_INFO_BAR` exists | `event.getName()` returns |
-|---|---|---|---|---|---|
-| 1.21.0–1.21.5 | `PoseStack` (Mojang) | `pushPose()` / `popPose()` | `translate(double, double, double)` (use `(dx, dy, 0)`) | No — omit from config | `ResourceLocation` |
-| 1.21.6–1.21.10 | `Matrix3x2fStack` (joml) | `pushMatrix()` / `popMatrix()` | `translate(float, float)` | Yes | `ResourceLocation` |
-| 1.21.11 | `Matrix3x2fStack` (joml) | `pushMatrix()` / `popMatrix()` | `translate(float, float)` | Yes | `Identifier` (Mojang adopted Fabric's name) |
+| MC versions | `pose()` returns | Push/pop methods | `translate` args | `CONTEXTUAL_INFO_BAR` exists | `EXPERIENCE_BAR` + `JUMP_METER` exist | `event.getName()` returns | `onRenderHUDPost` exists |
+|---|---|---|---|---|---|---|---|
+| 1.21.0, 1.21.1 | `PoseStack` (Mojang) | `pushPose()` / `popPose()` | `translate(double, double, double)` (use `(dx, dy, 0)`) | No | Yes | `ResourceLocation` | **Yes** |
+| 1.21.2–1.21.5 | `PoseStack` (Mojang) | `pushPose()` / `popPose()` | `translate(double, double, double)` (use `(dx, dy, 0)`) | No | Yes | `ResourceLocation` | **No — must be created** |
+| 1.21.6–1.21.9 | `Matrix3x2fStack` (joml) | `pushMatrix()` / `popMatrix()` | `translate(float, float)` | Yes | No | `ResourceLocation` | **No — must be created** |
+| 1.21.10 | `Matrix3x2fStack` (joml) | `pushMatrix()` / `popMatrix()` | `translate(float, float)` | Yes | No | `ResourceLocation` | **Yes** |
+| 1.21.11 | `Matrix3x2fStack` (joml) | `pushMatrix()` / `popMatrix()` | `translate(float, float)` | Yes | No | `Identifier` (package: `net.minecraft.resources.Identifier`, already imported) | **Yes** |
 
-AppleSkin layer-grouping wiring is already present in **1.21.10 only**. Every other version needs it added during this work.
+**AppleSkin layer-grouping wiring is already present in `shouldHideLayer()` of ALL 12 versions** (verified by `grep -c "appleskin:"` returning 6 in each version's `AutoHideHUD.java`). No `shouldHideLayer()` edits are needed for AppleSkin parity — only `getLayerOffset()` needs the AppleSkin routing. The work labelled "extend AppleSkin to all versions" reduces to a CLAUDE.md doc fix.
 
 ---
 
@@ -28,7 +30,7 @@ AppleSkin layer-grouping wiring is already present in **1.21.10 only**. Every ot
 
 **Per-version files modified (no new files):**
 - `autohidehud-<version>/src/main/java/com/krookedlilly/autohidehud/AutoHideHUDConfig.java` — add `hudPositionGroup` config section
-- `autohidehud-<version>/src/main/java/com/krookedlilly/autohidehud/AutoHideHUD.java` — add `posePushed` field + `getLayerOffset()` helper, modify `onRenderHUDPre`/`onRenderHUDPost`, add AppleSkin checks in `shouldHideLayer()` (only for versions that don't already have them — 1.21.10 already does)
+- `autohidehud-<version>/src/main/java/com/krookedlilly/autohidehud/AutoHideHUD.java` — add `posePushed` field + `getLayerOffset()` helper, modify (or create) `onRenderHUDPre`/`onRenderHUDPost`. No `shouldHideLayer()` edits needed (AppleSkin grouping is already present in every version per plan-review verification).
 
 **Repo-wide files modified:**
 - `CLAUDE.md` — fix stale `autohidehotbar` package-name note + update AppleSkin section to say it's supported on all versions
@@ -281,8 +283,6 @@ git commit -m "feat(1.21.10): apply pose offsets to HUD layers from new config"
 
 These versions (1.21.11, 1.21.9, 1.21.8, 1.21.7, 1.21.6) use the same `pushMatrix()`/`popMatrix()`/`translate(x, y)` API as 1.21.10. The pattern from Phase 1 is copy-paste with one delta per version (noted below).
 
-**Common delta from 1.21.10:** these versions don't have AppleSkin checks in `shouldHideLayer()` today. Each task includes adding those.
-
 ### Task 2.1: 1.21.11
 
 **Files:**
@@ -290,25 +290,17 @@ These versions (1.21.11, 1.21.9, 1.21.8, 1.21.7, 1.21.6) use the same `pushMatri
 - Modify: `autohidehud-1.21.11/src/main/java/com/krookedlilly/autohidehud/AutoHideHUD.java`
 
 **Version-specific deltas:**
-- `event.getName()` returns `Identifier`, not `ResourceLocation`. Change the `getLayerOffset` parameter type to `Identifier` and import `net.minecraft.util.Identifier` (replace any `ResourceLocation` import in that file with `Identifier`).
-- `AppleSkin checks must be added to shouldHideLayer()` — they're not present.
+- `event.getName()` returns `Identifier` (already imported as `net.minecraft.resources.Identifier` in this file — do NOT replace any import; the rename is class-name only, package is unchanged from 1.21.10's `ResourceLocation`). Change the `getLayerOffset` parameter type to `Identifier` to match the existing `shouldHideLayer(Identifier layerName)` signature.
+- `onRenderHUDPost` **already exists** (just the `alpha = 1f` reset). Modify it per Phase 1 Task 1.2 Step 4.
+- `shouldHideLayer()` already has AppleSkin checks. No change needed there.
 
-- [ ] **Step 1: Copy Phase 1 Task 1.1's config block into the 1.21.11 config file** (same code, no changes — the config is pure Java with no Identifier references)
+- [ ] **Step 1: Copy Phase 1 Task 1.1's config block verbatim into 1.21.11's `AutoHideHUDConfig.java`** (config is pure Java, no Identifier/ResourceLocation references)
 
-- [ ] **Step 2: Copy Phase 1 Task 1.2 changes into 1.21.11's `AutoHideHUD.java`**, replacing every `ResourceLocation` with `Identifier` in the `getLayerOffset` signature and body. The body's `.equals()` and `.toString()` calls work identically.
+- [ ] **Step 2: Add Phase 1 Task 1.2's `posePushed` field + `getLayerOffset()` helper into 1.21.11's `AutoHideHUD.java`**, with these changes to `getLayerOffset()`:
+  - Change parameter type from `ResourceLocation` to `Identifier`
+  - The body works as-is — `.equals(VanillaGuiLayers.X)` returns true via Identifier's equals, and `.toString()` is identical
 
-- [ ] **Step 3: Add AppleSkin checks to `shouldHideLayer()` in 1.21.11**
-
-Find `shouldHideLayer()` in 1.21.11's `AutoHideHUD.java`. Find the existing `if (AutoHideHUDConfig.hideHealthBar.get() && layerName.equals(VanillaGuiLayers.PLAYER_HEALTH)) return true;` line. Add these six lines immediately after the `hideHealthBar`/`hideFoodLevel` related checks:
-
-```java
-        if (AutoHideHUDConfig.hideHealthBar.get() && layerName.toString().equals("appleskin:health_offset"))   return true;
-        if (AutoHideHUDConfig.hideHealthBar.get() && layerName.toString().equals("appleskin:health_restored")) return true;
-        if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:hunger_restored")) return true;
-        if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:food_offset"))     return true;
-        if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:saturation_level"))return true;
-        if (AutoHideHUDConfig.hideFoodLevel.get() && layerName.toString().equals("appleskin:exhaustion_level"))return true;
-```
+- [ ] **Step 3: Modify `onRenderHUDPre` and `onRenderHUDPost` per Phase 1 Task 1.2 Steps 3 and 4** (no API differences)
 
 - [ ] **Step 4: Build**
 
@@ -330,7 +322,7 @@ Run the abbreviated test: set `globalOffsetY = 30`, confirm hotbar/hearts/hunger
 ```bash
 cd /Users/krookedmac/Documents/Development/KrookedLilly/autohidehud
 git add autohidehud-1.21.11/src/main/java/com/krookedlilly/autohidehud/
-git commit -m "feat(1.21.11): add HUD position offsets + AppleSkin layer grouping"
+git commit -m "feat(1.21.11): add HUD position offsets"
 ```
 
 ### Task 2.2: 1.21.9
@@ -340,27 +332,47 @@ git commit -m "feat(1.21.11): add HUD position offsets + AppleSkin layer groupin
 - Modify: `autohidehud-1.21.9/src/main/java/com/krookedlilly/autohidehud/AutoHideHUD.java`
 
 **Version-specific deltas:**
-- Same as 1.21.10 (uses `ResourceLocation`, has CONTEXTUAL_INFO_BAR).
-- AppleSkin checks must be added to `shouldHideLayer()`.
+- Uses `ResourceLocation`, has `CONTEXTUAL_INFO_BAR`.
+- `onRenderHUDPost` **does NOT exist** — must be **created** (see Step 4).
+- `shouldHideLayer()` already has AppleSkin checks. No change needed there.
 
 - [ ] **Step 1: Copy Phase 1 Task 1.1's config block verbatim into 1.21.9's `AutoHideHUDConfig.java`**
-- [ ] **Step 2: Copy Phase 1 Task 1.2's changes verbatim into 1.21.9's `AutoHideHUD.java`** (`ResourceLocation` is fine, no replacement)
-- [ ] **Step 3: Add AppleSkin checks to `shouldHideLayer()` in 1.21.9** (same six lines from Task 2.1 Step 3)
-- [ ] **Step 4: Build:** `cd autohidehud-1.21.9 && ./gradlew build`
-- [ ] **Step 5: Smoke test as in Task 2.1 Step 5**
-- [ ] **Step 6: Commit:** `git add autohidehud-1.21.9/... && git commit -m "feat(1.21.9): add HUD position offsets + AppleSkin layer grouping"`
+
+- [ ] **Step 2: Copy Phase 1 Task 1.2's `posePushed` field + `getLayerOffset()` helper verbatim into 1.21.9's `AutoHideHUD.java`** (no API differences)
+
+- [ ] **Step 3: Add the pose-push block as the very first statements of `onRenderHUDPre` per Phase 1 Task 1.2 Step 3**
+
+- [ ] **Step 4: Create the `onRenderHUDPost` handler** (1.21.9 doesn't have one)
+
+Add this method anywhere inside the `AutoHideHUD` class — placing it directly after `onRenderHUDPre` is natural:
+
+```java
+    @SubscribeEvent
+    public void onRenderHUDPost(RenderGuiLayerEvent.Post event) {
+        if (posePushed) {
+            event.getGuiGraphics().pose().popMatrix();
+            posePushed = false;
+        }
+    }
+```
+
+Verify `import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;` is already present (it is, since `onRenderHUDPre` uses it).
+
+- [ ] **Step 5: Build:** `cd autohidehud-1.21.9 && ./gradlew build`
+- [ ] **Step 6: Smoke test as in Task 2.1 Step 5**
+- [ ] **Step 7: Commit:** `git add autohidehud-1.21.9/... && git commit -m "feat(1.21.9): add HUD position offsets"`
 
 ### Task 2.3: 1.21.8
 
-Identical to Task 2.2 but for `autohidehud-1.21.8/`. Repeat steps 1–6.
+Identical to Task 2.2 (same deltas: missing `onRenderHUDPost`, has CONTEXTUAL_INFO_BAR, AppleSkin already present). Repeat steps 1–7 against `autohidehud-1.21.8/`.
 
 ### Task 2.4: 1.21.7
 
-Identical to Task 2.2 but for `autohidehud-1.21.7/`. Repeat steps 1–6.
+Identical to Task 2.2 against `autohidehud-1.21.7/`. Repeat steps 1–7.
 
 ### Task 2.5: 1.21.6
 
-Identical to Task 2.2 but for `autohidehud-1.21.6/`. Repeat steps 1–6.
+Identical to Task 2.2 against `autohidehud-1.21.6/`. Repeat steps 1–7.
 
 ---
 
@@ -368,13 +380,16 @@ Identical to Task 2.2 but for `autohidehud-1.21.6/`. Repeat steps 1–6.
 
 These versions (1.21.5, 1.21.4, 1.21.3, 1.21.2, 1.21.1, 1.21.0) use Mojang's `PoseStack` instead of joml's `Matrix3x2fStack`. The pose-translation code from Phase 1 needs adjustment.
 
-**Common delta from Phase 1 for ALL Phase-3 tasks:**
+**Common deltas from Phase 1 for ALL Phase-3 tasks:**
 - `pose.pushMatrix()` → `pose.pushPose()`
 - `pose.popMatrix()` → `pose.popPose()`
 - `pose.translate(off[0], off[1])` → `pose.translate(off[0], off[1], 0)` (third arg is Z; must be 0)
 - The `var pose = event.getGuiGraphics().pose();` line can stay as `var` — type inference picks up `PoseStack`.
 - `CONTEXTUAL_INFO_BAR` and `CONTEXTUAL_INFO_BAR_BACKGROUND` do NOT exist in these MC versions. Omit `contextualInfoBarOffsetX/Y` from the config block (skip those two field declarations and two builder definitions). Omit the corresponding branch in `getLayerOffset()`.
-- AppleSkin checks must be added to `shouldHideLayer()`.
+- **`EXPERIENCE_BAR` and `JUMP_METER` DO exist in these versions** and are grouped under `hideExperienceLevel` in `shouldHideLayer()`. The `getLayerOffset()` branch for experience must include all three: `EXPERIENCE_LEVEL`, `EXPERIENCE_BAR`, `JUMP_METER`. See Task 3.1 Step 2.
+- AppleSkin checks already exist in `shouldHideLayer()` (verified for every version) — **no `shouldHideLayer()` edits needed**.
+
+**Per-task variance:** 1.21.0 and 1.21.1 already have `onRenderHUDPost`. 1.21.2, 1.21.3, 1.21.4, 1.21.5 do NOT — for those, create it (same pattern as Phase 2 Task 2.2 Step 4, but using `popPose()` instead of `popMatrix()`).
 
 ### Task 3.1: 1.21.5
 
@@ -382,60 +397,76 @@ These versions (1.21.5, 1.21.4, 1.21.3, 1.21.2, 1.21.1, 1.21.0) use Mojang's `Po
 - Modify: `autohidehud-1.21.5/src/main/java/com/krookedlilly/autohidehud/AutoHideHUDConfig.java`
 - Modify: `autohidehud-1.21.5/src/main/java/com/krookedlilly/autohidehud/AutoHideHUD.java`
 
+**Version-specific:** `onRenderHUDPost` does NOT exist — must be created. No AppleSkin edits to `shouldHideLayer()`.
+
 - [ ] **Step 1: Copy Phase 1 Task 1.1's config block into 1.21.5's config**, but OMIT the `contextualInfoBarOffsetX/Y` static field declarations (lines under "// HUD Position Settings") AND omit the matching `contextualInfoBarOffsetX = BUILDER...` and `contextualInfoBarOffsetY = BUILDER...` lines inside the `static {}` initializer.
 
 - [ ] **Step 2: Copy Phase 1 Task 1.2's `posePushed` field + `getLayerOffset()` helper into 1.21.5's `AutoHideHUD.java`**, with these changes:
-  - Omit the `if (layerName.equals(VanillaGuiLayers.CONTEXTUAL_INFO_BAR) || layerName.equals(VanillaGuiLayers.CONTEXTUAL_INFO_BAR_BACKGROUND))` branch from `getLayerOffset()` entirely.
-  - In `onRenderHUDPre`, use this top-of-method code instead:
+  - Omit the `if (layerName.equals(VanillaGuiLayers.CONTEXTUAL_INFO_BAR) ...)` branch from `getLayerOffset()` entirely.
+  - Replace the `EXPERIENCE_LEVEL` branch with one that covers all three legacy XP layers:
 
     ```java
-            int[] off = getLayerOffset(event.getName());
-            if (off[0] != 0 || off[1] != 0) {
-                var pose = event.getGuiGraphics().pose();
-                pose.pushPose();
-                pose.translate(off[0], off[1], 0);
-                posePushed = true;
-            }
+        if (layerName.equals(VanillaGuiLayers.EXPERIENCE_LEVEL)
+                || layerName.equals(VanillaGuiLayers.EXPERIENCE_BAR)
+                || layerName.equals(VanillaGuiLayers.JUMP_METER))
+            return new int[]{gx + AutoHideHUDConfig.experienceLevelOffsetX.get(), gy + AutoHideHUDConfig.experienceLevelOffsetY.get()};
     ```
 
-  - In `onRenderHUDPost`, use:
+- [ ] **Step 3: Add the pose-push block as the very first statements of `onRenderHUDPre`** (PoseStack API):
 
-    ```java
-            if (posePushed) {
-                event.getGuiGraphics().pose().popPose();
-                posePushed = false;
-            }
-    ```
+```java
+        int[] off = getLayerOffset(event.getName());
+        if (off[0] != 0 || off[1] != 0) {
+            var pose = event.getGuiGraphics().pose();
+            pose.pushPose();
+            pose.translate(off[0], off[1], 0);
+            posePushed = true;
+        }
+```
 
-- [ ] **Step 3: Add AppleSkin checks to `shouldHideLayer()` in 1.21.5** (same six lines from Task 2.1 Step 3)
+- [ ] **Step 4: Create the `onRenderHUDPost` handler** (1.21.5 doesn't have one)
 
-- [ ] **Step 4: Build:** `cd autohidehud-1.21.5 && ./gradlew build`
+Add this method after `onRenderHUDPre`:
 
-- [ ] **Step 5: Smoke test as in Task 2.1 Step 5** (skip the contextual-info-bar specific check since the layer doesn't exist)
+```java
+    @SubscribeEvent
+    public void onRenderHUDPost(RenderGuiLayerEvent.Post event) {
+        if (posePushed) {
+            event.getGuiGraphics().pose().popPose();
+            posePushed = false;
+        }
+    }
+```
 
-- [ ] **Step 6: Commit:** `git add autohidehud-1.21.5/... && git commit -m "feat(1.21.5): add HUD position offsets + AppleSkin layer grouping"`
+Verify `import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;` is already present.
+
+- [ ] **Step 5: Build:** `cd autohidehud-1.21.5 && ./gradlew build`
+
+- [ ] **Step 6: Smoke test as in Task 2.1 Step 5** (skip the contextual-info-bar specific check since the layer doesn't exist). Also verify XP bar moves with global offset since it's now routed via `EXPERIENCE_BAR`.
+
+- [ ] **Step 7: Commit:** `git add autohidehud-1.21.5/... && git commit -m "feat(1.21.5): add HUD position offsets"`
 
 ### Task 3.2: 1.21.4
 
-Identical to Task 3.1 but for `autohidehud-1.21.4/`. Same PoseStack API, same omissions.
+Identical to Task 3.1 against `autohidehud-1.21.4/`. Same PoseStack API, same omissions, same Post-creation requirement.
 
 ### Task 3.3: 1.21.3
 
-Identical to Task 3.1 but for `autohidehud-1.21.3/`.
+Identical to Task 3.1 against `autohidehud-1.21.3/`.
 
 ### Task 3.4: 1.21.2
 
-Identical to Task 3.1 but for `autohidehud-1.21.2/`.
+Identical to Task 3.1 against `autohidehud-1.21.2/`.
 
 ### Task 3.5: 1.21.1
 
-Identical to Task 3.1 but for `autohidehud-1.21.1/`.
+Same as Task 3.1 against `autohidehud-1.21.1/` **EXCEPT** `onRenderHUDPost` **already exists** — modify it (per Step 4's body) instead of creating a new method. Steps 1, 2, 3, 5, 6, 7 are unchanged.
 
 **Extra note for 1.21.0/1.21.1:** per CLAUDE.md, the `Function<ResourceLocation, RenderType>`-based blit overloads don't exist in 1.21.0/1.21.1 (so the mixin file is shorter). This doesn't affect position offsets — pose translation is independent of the blit-color mixin. No extra adjustment needed.
 
 ### Task 3.6: 1.21.0
 
-Identical to Task 3.1 but for `autohidehud-1.21.0/`.
+Same as Task 3.5 (modify existing `onRenderHUDPost`) against `autohidehud-1.21.0/`.
 
 ---
 

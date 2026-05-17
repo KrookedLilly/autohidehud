@@ -10,7 +10,7 @@ Java Edition renders HUD elements roughly an inch above the bottom of the screen
 
 The reference implementation is the **HUD Manager** mod, which the user has decompiled previously. Its approach uses NeoForge's `RenderGuiLayerEvent.Pre/Post` to translate `GuiGraphics.pose()` before each HUD layer renders. This works for every layer we care about, including hotbar items (since `GuiItemRenderState` snapshots the pose at submit time).
 
-A secondary scope item: AppleSkin overlay layers are currently only grouped under their parent vanilla layers in 1.21.10. The same grouping should exist in all 11 mod versions so AppleSkin's overlays auto-hide and auto-offset alongside the vanilla health/food bars on every supported MC version.
+A secondary scope item discovered during plan review: CLAUDE.md claimed AppleSkin overlay layers were grouped under their parent vanilla layers only in 1.21.10. Verification shows the grouping is actually already present in `shouldHideLayer()` for all 12 versions — the doc was stale. So the AppleSkin "extension" reduces to: (a) update CLAUDE.md to reflect reality, and (b) wire AppleSkin layer IDs into the new `getLayerOffset()` routing so offsets follow hide behavior on every version.
 
 ## Goals
 
@@ -108,9 +108,9 @@ if (posePushed) {
 
 **Offsets apply regardless of `enableAutoHiding`.** A user who disables fade behavior can still use the position-offset feature.
 
-### AppleSkin layer grouping (extended to all versions)
+### AppleSkin layer grouping (already in place — verified)
 
-Each version's `shouldHideLayer()` gains the same six AppleSkin checks that 1.21.10 already has:
+CLAUDE.md previously claimed AppleSkin's six layer-ID checks lived only in 1.21.10's `shouldHideLayer()`. A grep across all 12 versions during plan review confirmed they're already present everywhere:
 
 ```java
 if (hideHealthBar && layerName.toString().equals("appleskin:health_offset"))   return true;
@@ -121,7 +121,9 @@ if (hideFoodLevel && layerName.toString().equals("appleskin:saturation_level"))r
 if (hideFoodLevel && layerName.toString().equals("appleskin:exhaustion_level"))return true;
 ```
 
-`getLayerOffset()` routes those same layer IDs to `healthBarOffset` / `foodOffset` (respectively) so AppleSkin overlays move with their parent.
+So no `shouldHideLayer()` changes are needed for AppleSkin parity. The new work is in two pieces:
+1. `getLayerOffset()` in each version routes those same six layer IDs to `healthBarOffset` / `foodOffset` so AppleSkin overlays move with their parent.
+2. CLAUDE.md's "AppleSkin integration (1.21.10 only)" heading is corrected to reflect cross-version coverage.
 
 **Risk to flag:** these layer IDs were verified against the AppleSkin build for MC 1.21.10. AppleSkin builds for other MC versions are expected to use the same un-versioned IDs, but this has not been confirmed for every release. The `additionalLayerIds` config remains the safety net if any specific AppleSkin build uses a different name.
 
@@ -142,7 +144,11 @@ A single instance field `boolean posePushed` is enough. NeoForge's `RenderGuiLay
 | 1.21.9–1.21.10 | Same as 1.21.6–1.21.8                                                          | 1.21.10 already has AppleSkin wiring; this spec extends it backward. |
 | 1.21.11        | Same as 1.21.6–1.21.8                                                          | Source-level `ResourceLocation`→`Identifier` rename was already applied. |
 
-No mixin changes in any version. AppleSkin grouping is identical in every version's `shouldHideLayer()`.
+No mixin changes in any version. AppleSkin grouping in `shouldHideLayer()` is already identical across all 12 versions and needs no edits.
+
+**`onRenderHUDPost` doesn't exist in 1.21.2–1.21.9.** Only 1.21.0, 1.21.1, 1.21.10, and 1.21.11 currently have a Post handler. The other 8 versions reset alpha inline at the end of `onRenderHUDPre`'s "visible" branch. For these versions, the new pose-pop logic requires *creating* an `onRenderHUDPost(RenderGuiLayerEvent.Post event)` method that contains only the pop block — no other behavior change.
+
+**`EXPERIENCE_BAR` and `JUMP_METER` layers exist in 1.21.0–1.21.5** as separate layers, both grouped under `hideExperienceLevel`. `getLayerOffset()` in those versions routes all three (`EXPERIENCE_LEVEL`, `EXPERIENCE_BAR`, `JUMP_METER`) to `experienceLevelOffset`.
 
 **Code-comment carry-over:** When implementing, add a brief comment at the `posePushed` field declaration noting that push/pop balance depends on the invariant "this mod never cancels `RenderGuiLayerEvent.Pre`". If a future change ever cancels Pre, the matching Post won't fire and the pose stack will leak.
 
