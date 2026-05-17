@@ -460,13 +460,22 @@ Identical to Task 3.1 against `autohidehud-1.21.2/`.
 
 ### Task 3.5: 1.21.1
 
-Same as Task 3.1 against `autohidehud-1.21.1/` **EXCEPT** `onRenderHUDPost` **already exists** — modify it (per Step 4's body) instead of creating a new method. Steps 1, 2, 3, 5, 6, 7 are unchanged.
+Same as Task 3.1 against `autohidehud-1.21.1/` for Steps 1, 2, 3, 5, 6, 7. **Replace Step 4** with:
+
+- [ ] **Step 4 (replacement): Modify the existing `onRenderHUDPost`** — do NOT add a second `@SubscribeEvent` method. Find the existing handler in 1.21.1's `AutoHideHUD.java` and insert this as the very first statements of the method body, before the existing `alpha = 1f;` reset:
+
+```java
+        if (posePushed) {
+            event.getGuiGraphics().pose().popPose();
+            posePushed = false;
+        }
+```
 
 **Extra note for 1.21.0/1.21.1:** per CLAUDE.md, the `Function<ResourceLocation, RenderType>`-based blit overloads don't exist in 1.21.0/1.21.1 (so the mixin file is shorter). This doesn't affect position offsets — pose translation is independent of the blit-color mixin. No extra adjustment needed.
 
 ### Task 3.6: 1.21.0
 
-Same as Task 3.5 (modify existing `onRenderHUDPost`) against `autohidehud-1.21.0/`.
+Same as Task 3.5 (use the replacement Step 4 — modify the existing `onRenderHUDPost`, do NOT create a new method) against `autohidehud-1.21.0/`.
 
 ---
 
@@ -570,6 +579,6 @@ git status
 git log --oneline -20
 ```
 
-Expected: working tree clean (except the pre-existing dirty `.DS_Store` / `build.gradle` / gradle.properties from before this work), and 14ish new commits — 11 per-version feature commits + 1 CLAUDE.md fix commit + the 2 prior spec commits.
+Expected git log from this work: 12 new commits — 1 per Phase-1 task × 2 (config + render for 1.21.10) + 1 per Phase-2/3 task × 10 (1.21.0–1.21.9 + 1.21.11) + 1 CLAUDE.md doc fix. Plus the 3 pre-existing spec/plan commits already on the branch from earlier in this session.
 
 The previously-tracked dirty files (`.DS_Store`, gradle locks, etc.) are unrelated to this work and should NOT be committed as part of it.
