@@ -167,9 +167,9 @@ For each version (full sweep on 1.21.10, smoke test on at least one older and on
 
 1. `./gradlew build` — confirms compile.
 2. `./gradlew runClient` — join world.
-3. Set `globalOffsetY = 20`. Confirm all core-HUD elements shift up 20px as a group; crosshair, chat, status effects unchanged.
-4. Add `hotbarOffsetY = 10`. Confirm hotbar shifts 30px total (global + per-element) while siblings stay at 20px.
-5. Set `crosshairOffsetX = 50`. Confirm crosshair moves; global isn't applied to it.
+3. Set `globalOffsetY = 20`. Confirm all core-HUD elements shift DOWN 20px as a group (joml screen coords: positive Y is downward); crosshair, chat, status effects unchanged.
+4. Add `hotbarOffsetY = 10`. Confirm hotbar shifts 30px down total (global + per-element) while siblings stay at 20px down.
+5. Set `crosshairOffsetX = 50`. Confirm crosshair moves right; global isn't applied to it.
 6. With AppleSkin installed (1.21.10 plus 1–2 other versions where the AppleSkin jar is available), confirm AppleSkin health/food overlays move with their parent.
 7. Trigger fade-out, confirm fade still works at the new position.
 8. F1 toggle, confirm no crashes from unmatched push/pop.
