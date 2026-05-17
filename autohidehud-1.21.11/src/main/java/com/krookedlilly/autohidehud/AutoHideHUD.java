@@ -62,8 +62,8 @@ public class AutoHideHUD {
     // HUD-position offset, and consumed in onRenderHUDPost to pop it. The
     // single-boolean approach is only safe because this mod never cancels
     // RenderGuiLayerEvent.Pre (so Post is guaranteed to fire) and layers do
-    // not nest. If a future change ever cancels Pre, this needs to become a
-    // ResourceLocation-keyed map so the right pushes get popped.
+    // not nest. If a future change ever cancels Pre, this needs to become an
+    // Identifier-keyed map so the right pushes get popped.
     private static boolean posePushed = false;
     private static final int[] NO_OFFSET = {0, 0};
 
