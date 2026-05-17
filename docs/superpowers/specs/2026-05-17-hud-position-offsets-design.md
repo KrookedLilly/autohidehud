@@ -137,12 +137,14 @@ A single instance field `boolean posePushed` is enough. NeoForge's `RenderGuiLay
 
 | Version    | Pose API to verify              | Notes                                      |
 |------------|---------------------------------|--------------------------------------------|
-| 1.21.0–1.21.5  | `pose().pushMatrix/translate/popMatrix` (or `pushPose/popPose` on the oldest)  | Verify exact method names per version during implementation. No `CONTEXTUAL_INFO_BAR` config entry. |
-| 1.21.6–1.21.8  | Same as above                                                                  | Hybrid pipeline; no impact on offsets.     |
-| 1.21.9–1.21.10 | Same as above                                                                  | 1.21.10 already has AppleSkin wiring; this spec extends it backward. |
-| 1.21.11        | Same as above                                                                  | Source-level `ResourceLocation`→`Identifier` rename was already applied. |
+| 1.21.0–1.21.5  | `pose().pushPose/translate/popPose` (older `PoseStack`) — likely; verify per version. NeoForge 21.4 is the rough switchover point to the 2D `Matrix3x2fStack`. | The actual gotcha: the *type* returned by `pose()` may differ (3D `PoseStack` vs 2D `Matrix3x2fStack`), not just the method names. No `CONTEXTUAL_INFO_BAR` config entry. |
+| 1.21.6–1.21.8  | `pose().pushMatrix/translate/popMatrix` (newer `Matrix3x2fStack`) — likely; verify per version. | Hybrid pipeline; no impact on offsets.     |
+| 1.21.9–1.21.10 | Same as 1.21.6–1.21.8                                                          | 1.21.10 already has AppleSkin wiring; this spec extends it backward. |
+| 1.21.11        | Same as 1.21.6–1.21.8                                                          | Source-level `ResourceLocation`→`Identifier` rename was already applied. |
 
 No mixin changes in any version. AppleSkin grouping is identical in every version's `shouldHideLayer()`.
+
+**Code-comment carry-over:** When implementing, add a brief comment at the `posePushed` field declaration noting that push/pop balance depends on the invariant "this mod never cancels `RenderGuiLayerEvent.Pre`". If a future change ever cancels Pre, the matching Post won't fire and the pose stack will leak.
 
 ## Edge cases
 
