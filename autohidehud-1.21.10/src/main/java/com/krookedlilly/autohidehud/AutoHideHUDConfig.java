@@ -236,14 +236,14 @@ public class AutoHideHUDConfig {
         BUILDER.pop();
 
         // HUD Position Section
-        BUILDER.comment("HUD Position - Shift HUD elements by X/Y pixels (positive Y moves up, positive X moves right)").push("hudPositionGroup");
+        BUILDER.comment("HUD Position - Shift HUD elements by X/Y pixels (screen coords: positive X moves right, positive Y moves down). Note: crosshair, chat, and status effects are NOT affected by globalOffset; they only respond to their own per-element offsets.").push("hudPositionGroup");
 
         globalOffsetX = BUILDER
                 .comment("Global X offset applied to all core HUD elements (hotbar, health, armor, food, air, vehicle health, xp level, contextual info bar, selected item name)")
                 .defineInRange("globalOffsetX", 0, -1000, 1000);
 
         globalOffsetY = BUILDER
-                .comment("Global Y offset applied to all core HUD elements (positive moves up)")
+                .comment("Global Y offset applied to all core HUD elements (positive moves down toward bottom of screen)")
                 .defineInRange("globalOffsetY", 0, -1000, 1000);
 
         hotbarOffsetX = BUILDER.comment("Per-element X offset added on top of global").defineInRange("hotbarOffsetX", 0, -1000, 1000);

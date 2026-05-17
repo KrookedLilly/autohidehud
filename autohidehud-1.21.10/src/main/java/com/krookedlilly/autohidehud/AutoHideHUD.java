@@ -61,7 +61,8 @@ public class AutoHideHUD {
     // RenderGuiLayerEvent.Pre (so Post is guaranteed to fire) and layers do
     // not nest. If a future change ever cancels Pre, this needs to become a
     // ResourceLocation-keyed map so the right pushes get popped.
-    private boolean posePushed = false;
+    private static boolean posePushed = false;
+    private static final int[] NO_OFFSET = {0, 0};
 
     public AutoHideHUD(IEventBus modBus, ModContainer modContainer) {
         NeoForge.EVENT_BUS.register(this);
@@ -432,7 +433,7 @@ public class AutoHideHUD {
         if (AutoHideHUDConfig.additionalLayerIds.get().contains(layerName.toString()))
             return new int[]{gx, gy};
 
-        return new int[]{0, 0};
+        return NO_OFFSET;
     }
 
     private boolean shouldHideLayer(ResourceLocation layerName) {
