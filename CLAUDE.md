@@ -111,12 +111,12 @@ Also: userdev plugin must be 7.1.25+ to avoid an NPE in `neoFormDecompile` on 26
 
 The existing stub is at `autohidehud-26.1.wip/` with the version bumps made but compilation broken. Before restarting, we need to investigate what `GuiGraphicsExtractor` does and how HUD rendering works in 26.x.
 
-### AppleSkin integration (1.21.10 only)
-`AutoHideHUDConfig` has dedicated booleans for AppleSkin's custom GUI layer IDs (`appleskin:health_offset`, `appleskin:health_restored`, `appleskin:hunger_restored`, `appleskin:food_offset`, `appleskin:saturation_level`, `appleskin:exhaustion_level`). There's also an open-ended `additionalLayerIds` list for users to hide arbitrary modded GUI layers. When adding support for a new compatibility target, follow this pattern rather than special-casing per-mod.
+### AppleSkin integration (all versions)
+AppleSkin's six custom GUI layer IDs (`appleskin:health_offset`, `appleskin:health_restored`, `appleskin:hunger_restored`, `appleskin:food_offset`, `appleskin:saturation_level`, `appleskin:exhaustion_level`) piggyback on the parent vanilla layer's hide and position-offset config. Enabling `hideHealthBar` also hides `appleskin:health_*` overlays; setting `healthBarOffsetY` also moves them. Same for the four food/saturation overlays under `hideFoodLevel` / `foodOffsetY`. Implemented identically in every version's `shouldHideLayer()` and `getLayerOffset()`. There's also an open-ended `additionalLayerIds` list for users to hide arbitrary modded GUI layers (which receive the `globalOffset` only). When adding support for a new compatibility target, follow this pattern rather than special-casing per-mod.
 
 ## Conventions worth knowing
 
-- **Package name differs across MC versions**: 1.21.10 uses `com.krookedlilly.autohidehud`; 1.21.8 and 1.21.4 use `com.krookedlilly.autohidehotbar` (historical name — the mod originally only hid the hotbar). Don't rename to unify — it would break existing installed configs.
+- **Package name is uniform across versions**: all 12 mod folders (1.21.0–1.21.11) use `com.krookedlilly.autohidehud`. The `com.krookedlilly.autohidehotbar` name only survives in the superseded `autohidehudcompanion/` legacy project (marked for deletion).
 - **Release tag format** is `<mod-version>;<companion-version>` (e.g. `1.1.3;1.0.3`) — the mod and companion are versioned independently but tagged together.
 - **Mod is client-only**: `@Mod(value = "autohidehud", dist = Dist.CLIENT)`. Don't add server-side logic.
 
