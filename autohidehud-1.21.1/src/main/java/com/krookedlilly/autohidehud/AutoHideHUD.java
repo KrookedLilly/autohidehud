@@ -577,7 +577,7 @@ public class AutoHideHUD {
     }
 
     public static int applyAlpha(int color, boolean isText) {
-        if (alpha >= 1f || inMenu) return color;
+        if (alpha >= 1f || inMenu || Minecraft.getInstance().screen != null) return color;
 
         // Extract ARGB components
         int alpha = (color >> 24) & 0xFF;
