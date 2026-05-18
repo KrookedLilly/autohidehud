@@ -330,6 +330,20 @@ public class AutoHideHUD {
             posePushed = true;
         }
 
+
+        // When any screen is open, force HUD visible and short-circuit the fade
+        // logic. lerpAlpha is time-based (System.currentTimeMillis), so it keeps
+        // progressing even when the game tick is paused — NeoForge 21.0-21.4 stops
+        // firing ClientTickEvent.Post during pause, so onClientTick never resets us.
+        // Without this gate, alpha drains while in a menu, the item-cancel mixins
+        // skip rendering items, and the HUD disappears behind the screen.
+        if (Minecraft.getInstance().screen != null) {
+            hudState = true;
+            alpha = hotbarAlpha = currentAlpha = 1f;
+            fadeStartTime = -1;
+            return;
+        }
+
         if (!AutoHideHUDConfig.enableAutoHiding.get()) return;
         if (!preventHide && currentTick - lastUpdatedTick > tickDuration) {
             float targetAlpha = (float) AutoHideHUDConfig.targetOpacity.getAsDouble();
